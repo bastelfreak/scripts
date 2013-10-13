@@ -1,5 +1,13 @@
 #!/bin/bash
-# install.sh
+
+##
+# written by Tim 'bastelfreak' Meusel (https://bastelfreak.de)
+# insalls zeyple (https://github.com/infertux/zeyple)
+# encrypts outgoing mails to $EXT_ADDRESS from $INT_ADDRESS with a public GPG Key. 
+# Usefull for sending e.g. cron mail
+# some more infos aren't available at my blog https://blog.bastelfreak.de
+##
+
 # Hier die interne Adresse eintragen, an welche die System-Mails normalerweise gehen
 INT_ADDRESS=$(whoami)@$(hostname -f)
 # EXT_ADDRESS definiert die externe Adresse, an die der Server die verschluesselten System-Mails versenden soll. 
