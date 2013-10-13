@@ -2,7 +2,7 @@
 
 ##
 # written by Tim 'bastelfreak' Meusel (https://bastelfreak.de)
-# insalls opendkim
+# installs opendkim
 # creates keys for every domain and every used email address. 
 # These infos are fetched from a mysql DB
 # schema is based on the mailserver tutorial at workaround.org/ispmail/squeeze
