@@ -2,7 +2,7 @@
 
 ##
 # written by Tim 'bastelfreak' Meusel (https://bastelfreak.de)
-# insalls zeyple (https://github.com/infertux/zeyple)
+# installs zeyple (https://github.com/infertux/zeyple)
 # encrypts outgoing mails to $EXT_ADDRESS from $INT_ADDRESS with a public GPG Key. 
 # Usefull for sending e.g. cron mail
 # some more infos aren't available at my blog https://blog.bastelfreak.de
