@@ -10,10 +10,10 @@
 ##
 
 MYSQLFILE="/etc/postfix/mysql-virtual-alias-maps.cf"
-USER=$(grep user ${MYSQLFILE} | awk '{print $3}')
-PASS=$(grep password ${MYSQLFILE} | awk '{print $3}')
-HOST=$(grep hosts ${MYSQLFILE} | awk '{print $3}')
-DB=$(grep dbname ${MYSQLFILE} | awk '{print $3}')
+USER=$(awk '/^user/ {print $3}' ${MYSQLFILE})
+PASS=$(awk '/^password/ {print $3}' ${MYSQLFILE})
+HOST=$(awk '/^hosts/ {print $3}' ${MYSQLFILE})
+PASS=$(awk '/^dbname/ {print $3}' ${MYSQLFILE})
 QUERY="(SELECT virtual_aliases.source as subject FROM \`virtual_aliases\`) UNION DISTINCT (SELECT virtual_aliases.destination as subject FROM \`virtual_aliases\`) UNION DISTINCT (SELECT virtual_users.email as subject FROM \`virtual_users\`) ORDER BY \`SUBJECT\` ASC"
 CONF_DIR="/etc/opendkim"
 SENDER_MAP="${CONF_DIR}/SigningTable"
