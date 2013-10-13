@@ -1,4 +1,14 @@
 #!/bin/bash
+
+##
+# written by Tim 'bastelfreak' Meusel (https://bastelfreak.de)
+# insalls opendkim
+# creates keys for every domain and every used email address. 
+# These infos are fetched from a mysql DB
+# schema is based on the mailserver tutorial at workaround.org/ispmail/squeeze
+# some more infos are available at my blog https://blog.bastelfreak.de/?p=721
+##
+
 MYSQLFILE="/etc/postfix/mysql-virtual-alias-maps.cf"
 USER=$(grep user ${MYSQLFILE} | awk '{print $3}')
 PASS=$(grep password ${MYSQLFILE} | awk '{print $3}')
