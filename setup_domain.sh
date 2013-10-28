@@ -29,34 +29,41 @@ function create_user {
 }
 
 function create_directories {
-	mkdir -p "${HOME}/htdocs"
-	mkdir -p "${HOME}/logs"
-	mkdir -p "${HOME}/config"
-	mkdir -p "${HOME}/tmp"
+	# $1 is something lile /home/google.de
+	#	 TODO: set correct permissions (or at least set any permissions)
+	local PATH="$1"
+	mkdir -p "${PATH}/htdocs"
+	mkdir -p "${PATH}/logs"
+	mkdir -p "${PATH}/config"
+	mkdir -p "${PATH}/tmp"
+	unset PATH
 }
 
 function add_apache_vhost {
+	# $1 is something like google.de // a complete domain without www
+	local DOMAIN="${1}"
 cat >> "/etc/apache2/sites-available/${DOMAIN}" <<END
 <VirtualHost *:80>
 	DocumentRoot /home/www/de/root
-	ServerName www..de
-  ServerAdmin me@
-	<Directory /home/www/kaltmae/root/>
+	ServerName www.${DOMAIN}.de
+  ServerAdmin admin@${DOMAIN}
+	<Directory /home/${DOMAIN}/htdocs>
 		Options -Indexes
     Order allow,deny
     allow from all
     AllowOverride All
 	</Directory>
-	ErrorLog /var/log/apache2/.de.error.log
+	ErrorLog /home/${DOMAIN}/error.log
   LogLevel warn
-  CustomLog /var/log/apache2/r.de.access.log combined
-  CustomLog /var/log/apache2/access.log combined
+  CustomLog /home/${DOMAIN}/logs/access.log combined
 </VirtualHost>
 END
+	a2ensite "${DOMAIN}"
+	unset DOMAIN
 }
 
 function add_lighttpd_vhost {
-# this is for later usage, because someday.... we want to have apache and lighty working in awesome coexistence
+	# this is for later usage, because someday.... we want to have apache and lighty working in awesome coexistence
 	true
 }
 
@@ -72,14 +79,16 @@ function output_help {
 ## check here for every parameter
 while getopts "h:help:?:r:remote:dir:domain:webserver:owner" opt; do
 	case ${opt} in
-		h|help|?) output_help; exit 1;;
+		h|help|?) output_help; exit 0;;
 		r|remote) REMOTE="${OPTARG}";;
 		dir) DIR="${OPTARG}";;
 		domain) DOMAIN="${OPTARG}";;
-		webserver) WEBSERVER="${OPTARG}";; ## thats currently not supported, you have to use apache
+		webserver) WEBSERVER="${OPTARG}";; # thats currently not supported, you have to use apache
 		owner) OWNER="${OPTARG}";;
 		# define function calls
-		adduser) [ -z "${REMOTE}" ] && create_user "${OPTARG}" || exit 1;;
+		add-user) [ -z "${REMOTE}" ] && create_user "${OPTARG}" || exit 0;;
+		setup_vhost) [ -z "${REMOTE}" ] && add_apache_vhost "${OPTARG}" || exit 0;;
+		create-directories) [ -z "${REMOTE}" ] && create_directories "${OPTARG}" || exit 0;;
 	esac
 done
 	
@@ -114,5 +123,7 @@ if [ ! -z "${REMOTE}" ]; then
 	# copy ssh key
 	ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE}
 	# create remote user
-	ssh ${REMOTE} '/root/scripts/setup_domain.sh --adduser ${OWNER}'
+	ssh ${REMOTE} '/root/scripts/setup_domain.sh --add-user "${OWNER}"'
+	# create directories
+	ssh ${REMOTE} '/root/scripts/setup_domain.sh --create-directories "${OWNER}"'
 fi
