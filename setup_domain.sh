@@ -53,9 +53,11 @@ cat >> "/etc/apache2/sites-available/${DOMAIN}" <<END
     allow from all
     AllowOverride All
 	</Directory>
-	ErrorLog /home/${DOMAIN}/error.log
+	ErrorLog /home/${DOMAIN}/error.apache.log
   LogLevel warn
   CustomLog /home/${DOMAIN}/logs/access.log combined
+	php_flag log_errors on
+	php_value error_log /home/${DOMAIN}/logs/error.php.log
 </VirtualHost>
 END
 	a2ensite "${DOMAIN}"
