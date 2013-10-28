@@ -21,10 +21,10 @@ function create_user {
 	local HASH=$(openssl passwd -crypt ${PW})
 	local HOME="/home/${DOMAIN}"
 	echo "the new password is ${PW}"
-	unset ${PW}
+	unset PW
 	# create user, set pw, disable shell, create home and group
 	useradd --shell /bin/false --create-home --home=${HOME} --user-group --password ${HASH} ${DOMAIN}
-	unset ${HASH}
+	unset HASH
 
 }
 
@@ -70,14 +70,16 @@ function output_help {
 }
 
 ## check here for every parameter
-while getopts "h:help:r:remote:dir" opt; do
+while getopts "h:help:?:r:remote:dir:domain:webserver:owner" opt; do
 	case ${opt} in
 		h|help|?) output_help; exit 1;;
 		r|remote) REMOTE="${OPTARG}";;
 		dir) DIR="${OPTARG}";;
 		domain) DOMAIN="${OPTARG}";;
-		webserver) WEBSERVER="${OPTARG}";; ## thats currently not supported
+		webserver) WEBSERVER="${OPTARG}";; ## thats currently not supported, you have to use apache
 		owner) OWNER="${OPTARG}";;
+		# define function calls
+		adduser) [ -z "${REMOTE}" ] && create_user "${OPTARG}" || exit 1;;
 	esac
 done
 	
@@ -95,12 +97,15 @@ if [ ! -z "${REMOTE}" ]; then
 		exit 1;
 	elif [ ! -d "${DIR}" ]; then
 		echo "your provided path is not valid"
+		exit 1
 	fi 
 	if [ -z "${DOMAIN}" ]; then
 		echo "you also have to provide the domain for the new vhost"
+		exit 1
 	fi
 	if [ -z "${OWNER}" ]; then
 		echo "you have to provide '--owner test', this will be the owner of the website on the new server"
+		exit 1
 	fi
 	# check for ssh key, if none then create one
 	if [ ! -f "~/.ssh/id_rsa.pub" ]; then
