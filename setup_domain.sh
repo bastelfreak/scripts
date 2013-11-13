@@ -6,11 +6,12 @@
 # you can place a copy of this script on two servers and migrate websites from one host to another
 ##
 
-function setup_php {
-	touch /etc/php5/fpm/pool.d/"${DOMAIN}"
+function setup_php() {
+	# $1 is the new port that we have to set in this config file
+	touch /etc/php5/fpm/pool.d/"${DOMAIN}".conf
 }
 
-function add_domain {
+function add_domain_to_dns {
 	# adds the domain to the powerdns db
 	true
 }
@@ -39,9 +40,16 @@ function create_directories {
 	unset PATH
 }
 
+function get_highest_fpm_port {
+	local PORT="$(awk 'BEGIN {FS=":"} /^listen/ {print $2}' /etc/php5/fpm/pool.d/www.conf)"
+	echo "${PORT}"
+}
+
 function add_apache_vhost {
 	# $1 is something like google.de // a complete domain without www
 	local DOMAIN="${1}"
+	PORT="$(get_highest_fpm_port)"
+	let PORT++
 cat >> "/etc/apache2/sites-available/${DOMAIN}" <<END
 <VirtualHost *:80>
 	DocumentRoot /home/www/de/root
@@ -58,8 +66,15 @@ cat >> "/etc/apache2/sites-available/${DOMAIN}" <<END
   CustomLog /home/${DOMAIN}/logs/access.log combined
 	php_flag log_errors on
 	php_value error_log /home/${DOMAIN}/logs/error.php.log
+<IfModule mod_fastcgi.c>
+	AddHandler php5-fcgi .php
+	Action php5-fcgi /php5-fcgi
+	Alias /php5-fcgi /usr/lib/cgi-bin/php5-fcgi
+	FastCgiExternalServer /usr/lib/cgi-bin/php5-fcgi -host 127.0.0.1:${PORT} -pass-header Authorization
+</IfModule>
 </VirtualHost>
 END
+	setup_php $PORT
 	a2ensite "${DOMAIN}"
 	unset DOMAIN
 }
