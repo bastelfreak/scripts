@@ -5,8 +5,8 @@
 # compiles libvirt under debian/ubuntu
 # some more infos are available at my blog https://blog.bastelfreak.de/?p=659
 ##
-
-aptitude install -y libvirt-bin libyajl-dev libxml2-dev libdevmapper-dev python-dev make > /dev/null
+aptitude update
+aptitude install -y libvirt-bin libyajl-dev libxml2-dev libdevmapper-dev python-dev make
 mv /etc/libvirt/libvirtd.conf /etc/libvirt/libvirtd.conf.bak
 cd /usr/src
 wget ftp://libvirt.org/libvirt/libvirt-1.1.3.tar.gz
