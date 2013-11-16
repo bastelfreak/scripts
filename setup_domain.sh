@@ -2,9 +2,13 @@
 
 ##
 # written by Tim Meusel, 07.09.2013
+# improved and audited from aibo
 # this script has to be placed on a webserver to add new vhosts and dns records
 # you can place a copy of this script on two servers and migrate websites from one host to another
 ##
+
+# http://www.davidpashley.com/articles/writing-robust-shell-scripts/
+set -e
 
 setup_php() {
 	# $1 is the new port that we have to set in this config file
