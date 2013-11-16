@@ -46,11 +46,11 @@ function create_user {
 function create_directories() {
 	# $1 is something lile /home/google.de
 	#	 TODO: set correct permissions (or at least set any permissions)
-	local PATH="${1}"
-	mkdir -p "${PATH}/htdocs"
-	mkdir -p "${PATH}/logs"
-	mkdir -p "${PATH}/config"
-	mkdir -p "${PATH}/tmp"
+	local ROOT_PATH="${1}"
+	mkdir -p "${ROOT_PATH}/htdocs"
+	mkdir -p "${ROOT_PATH}/logs"
+	mkdir -p "${ROOT_PATH}/config"
+	mkdir -p "${ROOT_PATH}/tmp"
 }
 
 function get_highest_fpm_port {
