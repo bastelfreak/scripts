@@ -8,7 +8,23 @@
 
 function setup_php() {
 	# $1 is the new port that we have to set in this config file
+	# $2 is the fqdn for the site
+	local PORT="${1}"
+	local DOMAIN="${2}"
 	touch /etc/php5/fpm/pool.d/"${DOMAIN}".conf
+cat >> "/etc/php5/fpm/pool.d/${DOMAIN}.conf" <<END
+[${DOMAIN}]
+user = ${DOMAIN}
+group = ${DOMAIN}
+listen = 127.0.0.1:${PORT}
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+chdir = /
+END
+	service php5-fpm force-reload
 }
 
 function add_domain_to_dns {
@@ -18,26 +34,23 @@ function add_domain_to_dns {
 
 function create_user {
 	# create password and echo it
-	local PW=$(openssl rand -hex 16)
-	local HASH=$(openssl passwd -crypt ${PW})
+	local PW="$(openssl rand -hex 16)"
+	local HASH="$(openssl passwd -crypt ${PW})"
 	local HOME="/home/${DOMAIN}"
 	echo "the new password is ${PW}"
-	unset PW
 	# create user, set pw, disable shell, create home and group
 	useradd --shell /bin/false --create-home --home=${HOME} --user-group --password ${HASH} ${DOMAIN}
-	unset HASH
 
 }
 
-function create_directories {
+function create_directories() {
 	# $1 is something lile /home/google.de
 	#	 TODO: set correct permissions (or at least set any permissions)
-	local PATH="$1"
+	local PATH="${1}"
 	mkdir -p "${PATH}/htdocs"
 	mkdir -p "${PATH}/logs"
 	mkdir -p "${PATH}/config"
 	mkdir -p "${PATH}/tmp"
-	unset PATH
 }
 
 function get_highest_fpm_port {
@@ -45,10 +58,10 @@ function get_highest_fpm_port {
 	echo "${PORT}"
 }
 
-function add_apache_vhost {
+function add_apache_vhost() {
 	# $1 is something like google.de // a complete domain without www
 	local DOMAIN="${1}"
-	PORT="$(get_highest_fpm_port)"
+	local PORT="$(get_highest_fpm_port)"
 	let PORT++
 cat >> "/etc/apache2/sites-available/${DOMAIN}" <<END
 <VirtualHost *:80>
@@ -74,9 +87,8 @@ cat >> "/etc/apache2/sites-available/${DOMAIN}" <<END
 </IfModule>
 </VirtualHost>
 END
-	setup_php $PORT
-	a2ensite "${DOMAIN}"
-	unset DOMAIN
+	setup_php "${PORT}" "${DOMAIN}"
+	/usr/sbin/a2ensite "${DOMAIN}"
 }
 
 function add_lighttpd_vhost {
@@ -92,6 +104,9 @@ function output_help {
 	echo "-r/--remote new-server.de ## script will copy a website to this server, also needs --dir"
 	echo ""
 }
+##
+# under this line, the real magic is gonna happen
+##
 
 ## check here for every parameter
 while getopts "h:help:?:r:remote:dir:domain:webserver:owner" opt; do
@@ -101,10 +116,10 @@ while getopts "h:help:?:r:remote:dir:domain:webserver:owner" opt; do
 		dir) DIR="${OPTARG}";;
 		domain) DOMAIN="${OPTARG}";;
 		webserver) WEBSERVER="${OPTARG}";; # thats currently not supported, you have to use apache
-		owner) OWNER="${OPTARG}";;
+		#owner) OWNER="${OPTARG}";;
 		# define function calls
 		add-user) [ -z "${REMOTE}" ] && create_user "${OPTARG}" || exit 0;;
-		setup_vhost) [ -z "${REMOTE}" ] && add_apache_vhost "${OPTARG}" || exit 0;;
+		setup-vhost) [ -z "${REMOTE}" ] && add_apache_vhost "${OPTARG}" || exit 0;;
 		create-directories) [ -z "${REMOTE}" ] && create_directories "${OPTARG}" || exit 0;;
 	esac
 done
@@ -129,10 +144,10 @@ if [ ! -z "${REMOTE}" ]; then
 		echo "you also have to provide the domain for the new vhost"
 		exit 1
 	fi
-	if [ -z "${OWNER}" ]; then
-		echo "you have to provide '--owner test', this will be the owner of the website on the new server"
-		exit 1
-	fi
+	#if [ -z "${OWNER}" ]; then
+		#echo "you have to provide '--owner test', this will be the owner of the website on the new server"
+		#exit 1
+	#fi
 	# check for ssh key, if none then create one
 	if [ ! -f "~/.ssh/id_rsa.pub" ]; then
 		ssh-keygen -b 8192 -N "" -f ~/.ssh/id_rsa -t rsa
@@ -140,7 +155,9 @@ if [ ! -z "${REMOTE}" ]; then
 	# copy ssh key
 	ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE}
 	# create remote user
-	ssh ${REMOTE} '/root/scripts/setup_domain.sh --add-user "${OWNER}"'
+	ssh "${REMOTE}" '/root/scripts/setup_domain.sh --add-user "${DOMAIN}"'
 	# create directories
-	ssh ${REMOTE} '/root/scripts/setup_domain.sh --create-directories "${OWNER}"'
+	ssh "${REMOTE}" '/root/scripts/setup_domain.sh --create-directories "${DOMAIN}"'
+	# create apache vhost, this also triggers setup_php
+	ssh "${REMOTE}" '/root/scripts/setup_domain.sh --setup-vhost "${DOMAIN}"'
 fi
