@@ -55,7 +55,8 @@ create_directories() {
 }
 
 get_highest_fpm_port() {
-	local max_port=0
+	# the default port from the standard php-fpm config is 9000
+	local max_port=9001
 	local port=0
 
 	for i in /etc/php5/fpm/pool.d/*.conf; do
