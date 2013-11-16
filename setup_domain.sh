@@ -6,7 +6,7 @@
 # you can place a copy of this script on two servers and migrate websites from one host to another
 ##
 
-function setup_php() {
+setup_php() {
 	# $1 is the new port that we have to set in this config file
 	# $2 is the fqdn for the site
 	local PORT="${1}"
@@ -27,58 +27,64 @@ END
 	service php5-fpm force-reload
 }
 
-function add_domain_to_dns {
+add_domain_to_dns() {
 	# adds the domain to the powerdns db
 	true
 }
 
-function create_user {
+create_user() {
+	# $1 is something lile google.de
+	# $2 is the root dir, like /home
+	local DOMAIN="${1}"
+	local ROOT_PATH="${2}"
 	# create password and echo it
 	local PW="$(openssl rand -hex 16)"
 	local HASH="$(openssl passwd -crypt ${PW})"
-	local HOME="/home/${DOMAIN}"
 	echo "the new password is ${PW}"
 	# create user, set pw, disable shell, create home and group
-	useradd --shell /bin/false --create-home --home=${HOME} --user-group --password ${HASH} ${DOMAIN}
-
+	useradd --shell /bin/false --create-home --home=${ROOT_PATH}/${DOMAIN} --user-group --password ${HASH} ${DOMAIN}
 }
 
-function create_directories() {
-	# $1 is something lile /home/google.de
+create_directories() {
+	# $1 is something lile google.de
+	# $2 is the root dir, like /home
 	#	 TODO: set correct permissions (or at least set any permissions)
-	local ROOT_PATH="${1}"
-	mkdir -p "${ROOT_PATH}/htdocs"
-	mkdir -p "${ROOT_PATH}/logs"
-	mkdir -p "${ROOT_PATH}/config"
-	mkdir -p "${ROOT_PATH}/tmp"
+	local DOMAIN="${1}"
+	local ROOT_PATH="${2}"
+	mkdir -p "${ROOT_PATH}/${DOMAIN}/htdocs"
+	mkdir -p "${ROOT_PATH}/${DOMAIN}/logs"
+	mkdir -p "${ROOT_PATH}/${DOMAIN}/config"
+	mkdir -p "${ROOT_PATH}/${DOMAIN}/tmp"
 }
 
-function get_highest_fpm_port {
+get_highest_fpm_port() {
 	local PORT="$(awk 'BEGIN {FS=":"} /^listen/ {print $2}' /etc/php5/fpm/pool.d/www.conf)"
 	echo "${PORT}"
 }
 
-function add_apache_vhost() {
+add_apache_vhost() {
 	# $1 is something like google.de // a complete domain without www
+	# $2 is the root dir, like /home
 	local DOMAIN="${1}"
+	local ROOT_PATH="${2}"
 	local PORT="$(get_highest_fpm_port)"
 	let PORT++
 cat >> "/etc/apache2/sites-available/${DOMAIN}" <<END
 <VirtualHost *:80>
-	DocumentRoot /home/www/de/root
-	ServerName www.${DOMAIN}.de
+	DocumentRoot ${ROOT_PATH}/${DOMAIN}/htdocs
+	ServerName ${DOMAIN}.de
   ServerAdmin admin@${DOMAIN}
-	<Directory /home/${DOMAIN}/htdocs>
+	<Directory ${ROOT_PATH}/${DOMAIN}/htdocs>
 		Options -Indexes
     Order allow,deny
     allow from all
     AllowOverride All
 	</Directory>
-	ErrorLog /home/${DOMAIN}/error.apache.log
-  LogLevel warn
-  CustomLog /home/${DOMAIN}/logs/access.log combined
+	ErrorLog ${ROOT_PATH}/${DOMAIN}/error.apache.log
+  LogLevel info
+  CustomLog ${ROOT_PATH}/${DOMAIN}/logs/access.log combined
 	php_flag log_errors on
-	php_value error_log /home/${DOMAIN}/logs/error.php.log
+	php_value error_log ${ROOT_PATH}/${DOMAIN}/logs/error.php.log
 <IfModule mod_fastcgi.c>
 	AddHandler php5-fcgi .php
 	Action php5-fcgi /php5-fcgi
@@ -91,17 +97,20 @@ END
 	/usr/sbin/a2ensite "${DOMAIN}"
 }
 
-function add_lighttpd_vhost {
+add_lighttpd_vhost() {
 	# this is for later usage, because someday.... we want to have apache and lighty working in awesome coexistence
 	true
 }
 
-function output_help {
+output_help() {
 	echo "written by Tim 'bastelfreak' Meusel <tim@online-mail.biz>"
 	echo "you are using my awesome script, thanks :)"
 	echo "Usage is easy:"
 	echo "-h/--help ## prints this help"
-	echo "-r/--remote new-server.de ## script will copy a website to this server, also needs --dir"
+	echo "-r/--remote new-server.de ## script will copy a website to this server, also needs --dir and --domain"
+	echo "-d/--dir ## local path to the root directory of the website that we want to copy, e.g. /var/www/"
+	echo "--domain ## fqdn for the site to setup, this will be the linux user on the new system"
+	echo "-n/--newhome ## this will be the new home directory for our website. here we place the site itself, logs, configs"
 	echo ""
 }
 ##
@@ -113,8 +122,9 @@ while getopts "h:help:?:r:remote:dir:domain:webserver:owner" opt; do
 	case ${opt} in
 		h|help|?) output_help; exit 0;;
 		r|remote) REMOTE="${OPTARG}";;
-		dir) DIR="${OPTARG}";;
+		d|dir) DIR="${OPTARG}";;
 		domain) DOMAIN="${OPTARG}";;
+		n|newhome) NEWHOME="${OPTARG}";;
 		webserver) WEBSERVER="${OPTARG}";; # thats currently not supported, you have to use apache
 		#owner) OWNER="${OPTARG}";;
 		# define function calls
@@ -130,7 +140,7 @@ if [ ! -z "${REMOTE}" ]; then
 	echo "what we do now:"
 	echo "check for local ssh key, create one if necessary and copy it to the new server"
 	echo "copy the provided path to new server"
-	echo "(path has to be a local one like /var/ww/ to the root of a website)"
+	echo "(path has to be a local one like /var/www/ to the root of a website)"
 	echo "Important: remote servers ssh has to be on port 22"
 	# check for some vars
 	if [ -z "${DIR}" ]; then
@@ -141,8 +151,11 @@ if [ ! -z "${REMOTE}" ]; then
 		exit 1
 	fi 
 	if [ -z "${DOMAIN}" ]; then
-		echo "you also have to provide the domain for the new vhost"
+		echo "you also have to provide the domain for the new vhost (--domain)"
 		exit 1
+	fi
+	if [ -z "${NEWHOME}" ]; then
+		echo "you have to provide the new root path for the website (-n/--newhome)"
 	fi
 	#if [ -z "${OWNER}" ]; then
 		#echo "you have to provide '--owner test', this will be the owner of the website on the new server"
@@ -150,14 +163,21 @@ if [ ! -z "${REMOTE}" ]; then
 	#fi
 	# check for ssh key, if none then create one
 	if [ ! -f "~/.ssh/id_rsa.pub" ]; then
-		ssh-keygen -b 8192 -N "" -f ~/.ssh/id_rsa -t rsa
+		ssh-keygen -b 8192 -N "" -f /root/.ssh/id_rsa -t rsa
 	fi
+
+	##
+	# the following part has to be more beautiful, we have to handle exit codes
+	##
+
 	# copy ssh key
 	ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE}
 	# create remote user
-	ssh "${REMOTE}" '/root/scripts/setup_domain.sh --add-user "${DOMAIN}"'
+	ssh "${REMOTE}" '/root/scripts/setup_domain.sh --add-user "${DOMAIN}" "${NEWHOME}"'
 	# create directories
-	ssh "${REMOTE}" '/root/scripts/setup_domain.sh --create-directories "${DOMAIN}"'
+	ssh "${REMOTE}" '/root/scripts/setup_domain.sh --create-directories "${DOMAIN}" "${NEWHOME}"'
 	# create apache vhost, this also triggers setup_php
-	ssh "${REMOTE}" '/root/scripts/setup_domain.sh --setup-vhost "${DOMAIN}"'
+	ssh "${REMOTE}" '/root/scripts/setup_domain.sh --setup-vhost "${DOMAIN}" "${NEWHOME}"'
+	# start the rsync
+	rsync -a --stats "${DIR}" -e 'ssh -i /root/.ssh/id_rsa root@${REMOTE}' 
 fi
