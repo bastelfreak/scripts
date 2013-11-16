@@ -58,7 +58,7 @@ get_highest_fpm_port() {
 	local max_port=0
 	local port=0
 
-	for i in /etc/php5/fpm/pool.d/*; do
+	for i in /etc/php5/fpm/pool.d/*.conf; do
   	port="$(awk 'BEGIN {FS=":"} /^listen/ {print $2}' ${i})"
   	[[ "${port}" =~ [0-9]+ ]] && [ "${port}" -gt "${max_port}" ] && max_port="${port}"
 	done
