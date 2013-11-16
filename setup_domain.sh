@@ -118,9 +118,9 @@ while getopts "h:help:?:r:remote:dir:domain:webserver:owner" opt; do
 		webserver) WEBSERVER="${OPTARG}";; # thats currently not supported, you have to use apache
 		#owner) OWNER="${OPTARG}";;
 		# define function calls
-		add-user) [ -z "${REMOTE}" ] && create_user "${OPTARG}" || exit 0;;
-		setup-vhost) [ -z "${REMOTE}" ] && add_apache_vhost "${OPTARG}" || exit 0;;
-		create-directories) [ -z "${REMOTE}" ] && create_directories "${OPTARG}" || exit 0;;
+		add-user) [ -z "${REMOTE}" ] && create_user "${OPTARG}" || exit 1;;
+		setup-vhost) [ -z "${REMOTE}" ] && add_apache_vhost "${OPTARG}" || exit 1;;
+		create-directories) [ -z "${REMOTE}" ] && create_directories "${OPTARG}" || exit 1;;
 	esac
 done
 	
