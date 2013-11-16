@@ -9,14 +9,14 @@
 setup_php() {
 	# $1 is the new port that we have to set in this config file
 	# $2 is the fqdn for the site
-	local PORT="${1}"
-	local DOMAIN="${2}"
-	touch /etc/php5/fpm/pool.d/"${DOMAIN}".conf
-cat >> "/etc/php5/fpm/pool.d/${DOMAIN}.conf" <<END
-[${DOMAIN}]
-user = ${DOMAIN}
-group = ${DOMAIN}
-listen = 127.0.0.1:${PORT}
+	local port="${1}"
+	local domain="${2}"
+	touch /etc/php5/fpm/pool.d/"${domain}".conf
+cat >> "/etc/php5/fpm/pool.d/${domain}.conf" <<END
+[${domain}]
+user = ${domain}
+group = ${domain}
+listen = 127.0.0.1:${port}
 pm = dynamic
 pm.max_children = 5
 pm.start_servers = 2
@@ -35,66 +35,69 @@ add_domain_to_dns() {
 create_user() {
 	# $1 is something lile google.de
 	# $2 is the root dir, like /home
-	local DOMAIN="${1}"
-	local ROOT_PATH="${2}"
+	local domain="${1}"
+	local root_path="${2}"
 	# create password and echo it
-	local PW="$(openssl rand -hex 16)"
-	local HASH="$(openssl passwd -crypt ${PW})"
-	echo "the new password is ${PW}"
+	local pw="$(openssl rand -hex 16)"
+	local pwhash="$(openssl passwd -crypt ${PW})"
+	echo "the new password is ${pw}"
 	# create user, set pw, disable shell, create home and group
-	useradd --shell /bin/false --create-home --home=${ROOT_PATH}/${DOMAIN} --user-group --password ${HASH} ${DOMAIN}
+	useradd --shell /bin/false --create-home --home=${root_path}/${domain} --user-group --password ${pwhash} ${domain}
 }
 
 create_directories() {
 	# $1 is something lile google.de
 	# $2 is the root dir, like /home
 	#	 TODO: set correct permissions (or at least set any permissions)
-	local DOMAIN="${1}"
-	local ROOT_PATH="${2}"
-	mkdir -p "${ROOT_PATH}/${DOMAIN}/htdocs"
-	mkdir -p "${ROOT_PATH}/${DOMAIN}/logs"
-	mkdir -p "${ROOT_PATH}/${DOMAIN}/config"
-	mkdir -p "${ROOT_PATH}/${DOMAIN}/tmp"
+	local domain="${1}"
+	local root_path="${2}"
+	mkdir -p "${root_path}/${domain}/{htdocs,logs,config,tmp}"
 }
 
 get_highest_fpm_port() {
-	local PORT="$(awk 'BEGIN {FS=":"} /^listen/ {print $2}' /etc/php5/fpm/pool.d/www.conf)"
-	echo "${PORT}"
+	local max_port=0
+	local port=0
+
+	for i in /etc/php5/fpm/pool.d/*; do
+  	port="$(awk 'BEGIN {FS=":"} /^listen/ {print $2}' ${i})"
+  	[[ "${port}" =~ [0-9]+ ]] && [ "${port}" -gt "${max_port}" ] && max_port="${port}"
+	done
+	echo "${max_port}"
 }
 
 add_apache_vhost() {
 	# $1 is something like google.de // a complete domain without www
 	# $2 is the root dir, like /home
-	local DOMAIN="${1}"
-	local ROOT_PATH="${2}"
-	local PORT="$(get_highest_fpm_port)"
+	local domain="${1}"
+	local root_path="${2}"
+	local port="$(get_highest_fpm_port)"
 	let PORT++
-cat >> "/etc/apache2/sites-available/${DOMAIN}" <<END
+cat >> "/etc/apache2/sites-available/${domain}" <<END
 <VirtualHost *:80>
-	DocumentRoot ${ROOT_PATH}/${DOMAIN}/htdocs
-	ServerName ${DOMAIN}.de
-  ServerAdmin admin@${DOMAIN}
-	<Directory ${ROOT_PATH}/${DOMAIN}/htdocs>
+	DocumentRoot ${root_path}/${domain}/htdocs
+	ServerName ${domain}.de
+  ServerAdmin admin@${domain}
+	<Directory ${root_patch}/${domain}/htdocs>
 		Options -Indexes
     Order allow,deny
     allow from all
     AllowOverride All
 	</Directory>
-	ErrorLog ${ROOT_PATH}/${DOMAIN}/error.apache.log
+	ErrorLog ${root_path}/${domain}/error.apache.log
   LogLevel info
-  CustomLog ${ROOT_PATH}/${DOMAIN}/logs/access.log combined
+  CustomLog ${root_path}/${domain}/logs/access.log combined
 	php_flag log_errors on
-	php_value error_log ${ROOT_PATH}/${DOMAIN}/logs/error.php.log
+	php_value error_log ${root_path}/${domain}/logs/error.php.log
 <IfModule mod_fastcgi.c>
 	AddHandler php5-fcgi .php
 	Action php5-fcgi /php5-fcgi
 	Alias /php5-fcgi /usr/lib/cgi-bin/php5-fcgi
-	FastCgiExternalServer /usr/lib/cgi-bin/php5-fcgi -host 127.0.0.1:${PORT} -pass-header Authorization
+	FastCgiExternalServer /usr/lib/cgi-bin/php5-fcgi -host 127.0.0.1:${port} -pass-header Authorization
 </IfModule>
 </VirtualHost>
 END
-	setup_php "${PORT}" "${DOMAIN}"
-	/usr/sbin/a2ensite "${DOMAIN}"
+	setup_php "${port}" "${domain}"
+	/usr/sbin/a2ensite "${domain}"
 }
 
 add_lighttpd_vhost() {
