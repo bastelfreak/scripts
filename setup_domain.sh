@@ -118,7 +118,7 @@ output_help() {
 ##
 
 ## check here for every parameter
-while getopts "h:help:?:r:remote:dir:domain:webserver:owner" opt; do
+while getopts "h:help:?:r:remote:d:dir:domain:n:newhome:webserver:add-user:setup-vhost:create-directories:" opt; do
 	case ${opt} in
 		h|help|?) output_help; exit 0;;
 		r|remote) REMOTE="${OPTARG}";;
