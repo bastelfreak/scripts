@@ -11,13 +11,12 @@
 set -e
 
 setup_php() {
-	# $1 is the new port that we have to set in this config file
-	# $2 is the fqdn for the site
-	local port="${1}"
-	local domain="${2}"
-	if [ -z "${domain}" ] || [ -z "${root_path}" ]; then
+	#$1 is something lile 'google.de /home'
+	if [ -z "${1}" ]; then
 		exit 1
 	fi
+	local domain=${1%% *}
+	local root_path=${1#* }
 	touch /etc/php5/fpm/pool.d/"${domain}".conf
 cat >> "/etc/php5/fpm/pool.d/${domain}.conf" <<END
 [${domain}]
@@ -40,14 +39,14 @@ add_domain_to_dns() {
 }
 
 create_user() {
-	# $1 is something lile google.de
-	# $2 is the root dir, like /home
-	local domain="${1}"
-	local root_path="${2}"
-	if [ -z "${domain}" ] || [ -z "${root_path}" ]; then
-		echo "\$1 or \$2 is not set"
+	# $1 is something lile 'google.de /home'
+	if [ -z "${1}" ]; then
 		exit 1
 	fi
+	local domain=${1%% *}
+	local root_path=${1#* }
+	echo "${domain}"
+	echo "${root_path}"
 	# create password and echo it
 	#local pw="$(openssl rand -hex 16)"
 	#local pwhash="$(openssl passwd -crypt ${PW})"
@@ -55,18 +54,16 @@ create_user() {
 	# create user, set pw, disable shell, create home and group
 	#useradd --shell /bin/false --create-home --home=${root_path}/${domain} --user-group --password ${pwhash} ${domain}
 	#useradd --shell /bin/false --create-home --home="${root_path}/${domain}" --user-group --disabled-password --gecos "" "${domain}"
-	adduser --disabled-password --group --gecos "" --home "${root_path}/${domain}" --shell /bin/bash "${domain}"
+	adduser --force-badname --disabled-password --group --gecos "" --home "${root_path}/${domain}" --shell /bin/bash "${domain}"
 }
 
 create_directories() {
-	# $1 is something lile google.de
-	# $2 is the root dir, like /home
-	#	 TODO: set correct permissions (or at least set any permissions)
-	local domain="${1}"
-	local root_path="${2}"
-	if [ -z "${domain}" ] || [ -z "${root_path}" ]; then
+	# $1 is something lile 'google.de /home'
+	if [ -z "${1}" ]; then
 		exit 1
 	fi
+	local domain=${1%% *}
+	local root_path=${1#* }
 	mkdir -p "${root_path}/${domain}/{htdocs,logs,config,tmp}"
 	chown --recursive "${domain}:${domain}" "${root_path}/${domain}"
 	chown 755 --recursive "${root_path}/${domain}"
@@ -85,14 +82,13 @@ get_highest_fpm_port() {
 }
 
 add_apache_vhost() {
-	# $1 is something like google.de // a complete domain without www
-	# $2 is the root dir, like /home
-	local domain="${1}"
-	local root_path="${2}"
 	local port="$(get_highest_fpm_port)"
-	if [ -z "${domain}" ] || [ -z "${root_path}" ] || [ -z "${port}" ]; then
+	# $1 is something lile 'google.de /home'
+	if [ -z "${1}" ] || [ -z "${port}" ]; then
 		exit 1
 	fi
+	local domain=${1%% *}
+	local root_path=${1#* }
 	let PORT++
 cat >> "/etc/apache2/sites-available/${domain}" <<END
 <VirtualHost *:80>
@@ -204,7 +200,6 @@ if [ ! -z "${REMOTE}" ]; then
 	# copy ssh key ## TODO: check if the key already exists on the destination
 	ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE}
 	# create remote user
-	echo "${DOMAIN} ${NEWHOME}"
 	ssh "${REMOTE}" "/root/scripts/setup_domain.sh -a '${DOMAIN} ${NEWHOME}'"
 	# create directories
 	ssh "${REMOTE}" "/root/scripts/setup_domain.sh -c '${DOMAIN} ${NEWHOME}'"
