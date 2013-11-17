@@ -112,7 +112,7 @@ output_help() {
 	echo "Usage is easy:"
 	echo "-h/--help ## prints this help"
 	echo "-r/--remote new-server.de ## script will copy a website to this server, also needs --dir and --domain"
-	echo "-d/--dir ## local path to the root directory of the website that we want to copy, e.g. /var/www/"
+	echo "--dir ## local path to the root directory of the website that we want to copy, e.g. /var/www/"
 	echo "--domain ## fqdn for the site to setup, this will be the linux user on the new system"
 	echo "-n/--newhome ## this will be the new home directory for our website. here we place the site itself, logs, configs"
 	echo ""
@@ -122,19 +122,18 @@ output_help() {
 ##
 
 ## check here for every parameter
-while getopts "h:help:?:r:remote:d:dir:domain:n:newhome:webserver:add-user:setup-vhost:create-directories:" opt; do
+while getopts "h:help:?:r:remote:dir:domain:n:newhome:webserver:add-user:setup-vhost:create-directories" opt; do
 	case ${opt} in
-		h|help|?) output_help; exit 0;;
-		r|remote) REMOTE="${OPTARG}";;
-		d|dir) DIR="${OPTARG}";;
-		domain) DOMAIN="${OPTARG}";;
-		n|newhome) NEWHOME="${OPTARG}";;
-		webserver) WEBSERVER="${OPTARG}";; # thats currently not supported, you have to use apache
-		#owner) OWNER="${OPTARG}";;
+		h|help ) output_help; exit 0;;
+		r|remote ) REMOTE="${OPTARG}";;
+		dir ) DIR="${OPTARG}";;
+		domain ) DOMAIN="${OPTARG}";;
+		n|newhome ) NEWHOME="${OPTARG}";;
+		webserver ) WEBSERVER="${OPTARG}";; # thats currently not supported, you have to use apache
 		# define function calls
-		add-user) [ -z "${REMOTE}" ] && create_user "${OPTARG}" || exit 1;;
-		setup-vhost) [ -z "${REMOTE}" ] && add_apache_vhost "${OPTARG}" || exit 1;;
-		create-directories) [ -z "${REMOTE}" ] && create_directories "${OPTARG}" || exit 1;;
+		add-user ) [ -z "${REMOTE}" ] && create_user "${OPTARG}" || exit 1;;
+		setup-vhost ) [ -z "${REMOTE}" ] && add_apache_vhost "${OPTARG}" || exit 1;;
+		create-directories ) [ -z "${REMOTE}" ] && create_directories "${OPTARG}" || exit 1;;
 	esac
 done
 	
@@ -152,19 +151,20 @@ if [ ! -z "${REMOTE}" ]; then
 		exit 1;
 	elif [ ! -d "${DIR}" ]; then
 		echo "your provided path is not valid"
+		echo "${DIR}"
 		exit 1
 	fi 
+	echo "your --dir param seems valid"
 	if [ -z "${DOMAIN}" ]; then
 		echo "you also have to provide the domain for the new vhost (--domain)"
 		exit 1
 	fi
+	echo "your --domain param seems valid"
 	if [ -z "${NEWHOME}" ]; then
 		echo "you have to provide the new root path for the website (-n/--newhome)"
+		exit 1
 	fi
-	#if [ -z "${OWNER}" ]; then
-		#echo "you have to provide '--owner test', this will be the owner of the website on the new server"
-		#exit 1
-	#fi
+	echo "your -n/--newhome param seems valid"
 	# check for ssh key, if none then create one
 	if [ ! -f "~/.ssh/id_rsa.pub" ]; then
 		ssh-keygen -b 8192 -N "" -f /root/.ssh/id_rsa -t rsa
