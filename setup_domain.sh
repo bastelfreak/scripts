@@ -42,11 +42,12 @@ create_user() {
 	local domain="${1}"
 	local root_path="${2}"
 	# create password and echo it
-	local pw="$(openssl rand -hex 16)"
-	local pwhash="$(openssl passwd -crypt ${PW})"
-	echo "the new password is ${pw}"
+	#local pw="$(openssl rand -hex 16)"
+	#local pwhash="$(openssl passwd -crypt ${PW})"
+	#echo "the new password is ${pw}"
 	# create user, set pw, disable shell, create home and group
-	useradd --shell /bin/false --create-home --home=${root_path}/${domain} --user-group --password ${pwhash} ${domain}
+	#useradd --shell /bin/false --create-home --home=${root_path}/${domain} --user-group --password ${pwhash} ${domain}
+	useradd --shell /bin/false --create-home --home="${root_path}/${domain}" --user-group --disabled-password --gecos "" "${domain}"
 }
 
 create_directories() {
@@ -56,6 +57,8 @@ create_directories() {
 	local domain="${1}"
 	local root_path="${2}"
 	mkdir -p "${root_path}/${domain}/{htdocs,logs,config,tmp}"
+	chown --recursive "${domain}:${domain}" "${root_path}/${domain}"
+	chown 755 --recursive "${root_path}/${domain}"
 }
 
 get_highest_fpm_port() {
@@ -184,7 +187,7 @@ if [ ! -z "${REMOTE}" ]; then
 	# the following part has to be more beautiful, we have to handle exit codes
 	##
 
-	# copy ssh key
+	# copy ssh key ## TODO: check if the key already exists on the destination
 	ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE}
 	# create remote user
 	ssh "${REMOTE}" '/root/scripts/setup_domain.sh -a "${DOMAIN}" "${NEWHOME}"'
@@ -194,4 +197,6 @@ if [ ! -z "${REMOTE}" ]; then
 	ssh "${REMOTE}" '/root/scripts/setup_domain.sh -s "${DOMAIN}" "${NEWHOME}"'
 	# start the rsync
 	rsync --itemize-changes --archive --stats "${DIR}/" -e 'ssh -i /root/.ssh/id_rsa ' "root@${REMOTE}:${NEWHOME}/${DOMAIN}/${htdocs}"
+	# set the permissions again
+	ssh "${REMOTE}" 'chown --recursive "${DOMAIN}:${DOMAIN}" "${NEWHOME}:${NEWHOME}"'
 fi
