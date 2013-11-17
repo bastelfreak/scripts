@@ -47,7 +47,8 @@ create_user() {
 	#echo "the new password is ${pw}"
 	# create user, set pw, disable shell, create home and group
 	#useradd --shell /bin/false --create-home --home=${root_path}/${domain} --user-group --password ${pwhash} ${domain}
-	useradd --shell /bin/false --create-home --home="${root_path}/${domain}" --user-group --disabled-password --gecos "" "${domain}"
+	#useradd --shell /bin/false --create-home --home="${root_path}/${domain}" --user-group --disabled-password --gecos "" "${domain}"
+	adduser --disabled-password --group --gecos "" --home "${${root_path}/${domain}}" --shell /bin/bash "${domain}"
 }
 
 create_directories() {
