@@ -41,6 +41,9 @@ create_user() {
 	# $2 is the root dir, like /home
 	local domain="${1}"
 	local root_path="${2}"
+	if [ -z "${domain}" ] || [ -z "${root_path}" ]; then
+		exit 1
+	fi
 	# create password and echo it
 	#local pw="$(openssl rand -hex 16)"
 	#local pwhash="$(openssl passwd -crypt ${PW})"
@@ -57,6 +60,9 @@ create_directories() {
 	#	 TODO: set correct permissions (or at least set any permissions)
 	local domain="${1}"
 	local root_path="${2}"
+	if [ -z "${domain}" ] || [ -z "${root_path}" ]; then
+		exit 1
+	fi
 	mkdir -p "${root_path}/${domain}/{htdocs,logs,config,tmp}"
 	chown --recursive "${domain}:${domain}" "${root_path}/${domain}"
 	chown 755 --recursive "${root_path}/${domain}"
@@ -80,6 +86,9 @@ add_apache_vhost() {
 	local domain="${1}"
 	local root_path="${2}"
 	local port="$(get_highest_fpm_port)"
+	if [ -z "${domain}" ] || [ -z "${root_path}" ] || [ -z "${port}" ]; then
+		exit 1
+	fi
 	let PORT++
 cat >> "/etc/apache2/sites-available/${domain}" <<END
 <VirtualHost *:80>
@@ -168,17 +177,17 @@ if [ ! -z "${REMOTE}" ]; then
 		echo "${DIR}"
 		exit 1
 	fi 
-	echo "your -o param seems valid"
+	echo "your -o param seems valid, it is ${DIR}"
 	if [ -z "${DOMAIN}" ]; then
 		echo "you also have to provide the domain for the new vhost (-d)"
 		exit 1
 	fi
-	echo "your -d param seems valid"
+	echo "your -d param seems valid, it is ${DOMAIN}"
 	if [ -z "${NEWHOME}" ]; then
 		echo "you have to provide the new root path for the website (-n)"
 		exit 1
 	fi
-	echo "your -n param seems valid"
+	echo "your -n param seems valid, it is ${NEWHOME}"
 	# check for ssh key, if none then create one
 	if [ ! -f "/root/.ssh/id_rsa.pub" ] || [ ! -f "/root/.ssh/id_rsa" ]; then
 		ssh-keygen -b 8192 -N "" -f /root/.ssh/id_rsa -t rsa
