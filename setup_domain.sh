@@ -126,8 +126,13 @@ output_help() {
 ##
 
 ## check here for every parameter
-while getopts "h:help:?:r:remote:dir:domain:n:newhome:webserver:add-user:setup-vhost:create-directories" opt; do
-	case ${opt} in
+if [ -z "${1}" ]; then
+	output_help
+	exit 0
+fi
+
+while getopts ":h:help:?:r:remote:dir:domain:n:newhome:webserver:add-user:setup-vhost:create-directories:" opt; do
+	case "${opt}" in
 		h|help ) output_help; exit 0;;
 		r|remote ) REMOTE="${OPTARG}";;
 		dir ) DIR="${OPTARG}";;
@@ -138,6 +143,7 @@ while getopts "h:help:?:r:remote:dir:domain:n:newhome:webserver:add-user:setup-v
 		add-user ) [ -z "${REMOTE}" ] && create_user "${OPTARG}" || exit 1;;
 		setup-vhost ) [ -z "${REMOTE}" ] && add_apache_vhost "${OPTARG}" || exit 1;;
 		create-directories ) [ -z "${REMOTE}" ] && create_directories "${OPTARG}" || exit 1;;
+		: ) echo "something is wrong with the parameters"; exit 1;;
 	esac
 done
 	
@@ -148,7 +154,7 @@ if [ ! -z "${REMOTE}" ]; then
 	echo "check for local ssh key, create one if necessary and copy it to the new server"
 	echo "copy the provided path to new server"
 	echo "(path has to be a local one like /var/www/ to the root of a website)"
-	echo "Important: remote servers ssh has to be on port 22"
+	echo "Important: remote servers sshd has to be on port 22"
 	# check for some vars
 	if [ -z "${DIR}" ]; then
 		echo "your have to provide a path like '--dir /var/www', otherwise we can't copy anything"
