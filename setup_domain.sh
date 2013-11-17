@@ -15,6 +15,9 @@ setup_php() {
 	# $2 is the fqdn for the site
 	local port="${1}"
 	local domain="${2}"
+	if [ -z "${domain}" ] || [ -z "${root_path}" ]; then
+		exit 1
+	fi
 	touch /etc/php5/fpm/pool.d/"${domain}".conf
 cat >> "/etc/php5/fpm/pool.d/${domain}.conf" <<END
 [${domain}]
@@ -42,6 +45,7 @@ create_user() {
 	local domain="${1}"
 	local root_path="${2}"
 	if [ -z "${domain}" ] || [ -z "${root_path}" ]; then
+		echo "\$1 or \$2 is not set"
 		exit 1
 	fi
 	# create password and echo it
@@ -200,13 +204,13 @@ if [ ! -z "${REMOTE}" ]; then
 	# copy ssh key ## TODO: check if the key already exists on the destination
 	ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE}
 	# create remote user
-	ssh "${REMOTE}" '/root/scripts/setup_domain.sh -a "${DOMAIN}" "${NEWHOME}"'
+	ssh "${REMOTE}  '/root/scripts/setup_domain.sh -a ${DOMAIN} ${NEWHOME}'"
 	# create directories
-	ssh "${REMOTE}" '/root/scripts/setup_domain.sh -c "${DOMAIN}" "${NEWHOME}"'
+	ssh "${REMOTE} '/root/scripts/setup_domain.sh -c ${DOMAIN} ${NEWHOME}'"
 	# create apache vhost, this also triggers setup_php
-	ssh "${REMOTE}" '/root/scripts/setup_domain.sh -s "${DOMAIN}" "${NEWHOME}"'
+	ssh "${REMOTE} '/root/scripts/setup_domain.sh -s ${DOMAIN} ${NEWHOME}'"
 	# start the rsync
-	rsync --itemize-changes --archive --stats "${DIR}/" -e 'ssh -i /root/.ssh/id_rsa ' "root@${REMOTE}:${NEWHOME}/${DOMAIN}/${htdocs}"
+	rsync --itemize-changes --archive --stats "${DIR}/" -e 'ssh -i /root/.ssh/id_rsa' "root@${REMOTE}:${NEWHOME}/${DOMAIN}/${htdocs}"
 	# set the permissions again
-	ssh "${REMOTE}" 'chown --recursive "${DOMAIN}:${DOMAIN}" "${NEWHOME}:${NEWHOME}"'
+	ssh "${REMOTE} 'chown --recursive ${DOMAIN}:${DOMAIN} ${NEWHOME}:${NEWHOME}'"
 fi
