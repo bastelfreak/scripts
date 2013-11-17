@@ -57,8 +57,9 @@ create_user() {
 	# create user, set pw, disable shell, create home and group
 	#useradd --shell /bin/false --create-home --home=${root_path}/${domain} --user-group --password ${pwhash} ${domain}
 	#useradd --shell /bin/false --create-home --home="${root_path}/${domain}" --user-group --disabled-password --gecos "" "${domain}"
-	if ! grep -quiet "${domain}" /etc/passwd; then
-		adduser --force-badname --disabled-password --group --gecos "" --home "${root_path}/${domain}" --shell /bin/bash "${domain}"
+	if ! grep --quiet "${domain}" /etc/passwd; then
+		#adduser --force-badname --disabled-password --group --gecos "" --home "${root_path}/${domain}" --shell /bin/bash "${domain}"
+		adduser --force-badname --disabled-password --gecos "" --home "${root_path}/${domain}" --shell /bin/bash "${domain}"
 	fi
 }
 
@@ -71,7 +72,7 @@ create_directories() {
 	local root_path=${1#* }
 	mkdir -p "${root_path}/${domain}/{htdocs,logs,config,tmp}" > /dev/null
 	chown --recursive "${domain}:${domain}" "${root_path}/${domain}"
-	chown 755 --recursive "${root_path}/${domain}"
+	chmod 755 --recursive "${root_path}/${domain}"
 }
 
 get_highest_fpm_port() {
@@ -182,17 +183,14 @@ if [ ! -z "${REMOTE}" ]; then
 		echo "${DIR}"
 		exit 1
 	fi 
-	echo "your -o param seems valid, it is ${DIR}"
 	if [ -z "${DOMAIN}" ]; then
 		echo "you also have to provide the domain for the new vhost (-d)"
 		exit 1
 	fi
-	echo "your -d param seems valid, it is ${DOMAIN}"
 	if [ -z "${NEWHOME}" ]; then
 		echo "you have to provide the new root path for the website (-n)"
 		exit 1
 	fi
-	echo "your -n param seems valid, it is ${NEWHOME}"
 	# check for ssh key, if none then create one
 	if [ ! -f "/root/.ssh/id_rsa.pub" ] || [ ! -f "/root/.ssh/id_rsa" ]; then
 		ssh-keygen -b 8192 -N "" -f /root/.ssh/id_rsa -t rsa
@@ -213,5 +211,5 @@ if [ ! -z "${REMOTE}" ]; then
 	# start the rsync
 	rsync --itemize-changes --archive --stats "${DIR}/" -e 'ssh -i /root/.ssh/id_rsa' "root@${REMOTE}:${NEWHOME}/${DOMAIN}/${htdocs}"
 	# set the permissions again
-	ssh "${REMOTE}" "chown --recursive ${DOMAIN}:${DOMAIN} ${NEWHOME}:${NEWHOME}"
+	ssh "${REMOTE}" "chown --recursive ${DOMAIN}:${DOMAIN} ${NEWHOME}/${DOMAIN}"
 fi
