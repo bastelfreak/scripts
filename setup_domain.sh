@@ -70,7 +70,9 @@ create_directories() {
 	fi
 	local domain=${1%% *}
 	local root_path=${1#* }
-	mkdir -p "${root_path}/${domain}/{htdocs,logs,config,tmp}" > /dev/null
+	mkdir -p "${root_path}/${domain}/htdocs/tmp"
+	mkdir -p "${root_path}/${domain}/htdocs/config"
+	mkdir -p "${root_path}/${domain}/htdocs/logs"
 	chown --recursive "${domain}:${domain}" "${root_path}/${domain}"
 	chmod 755 --recursive "${root_path}/${domain}"
 }
@@ -107,7 +109,7 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
     allow from all
     AllowOverride All
 	</Directory>
-	ErrorLog ${root_path}/${domain}/error.apache.log
+	ErrorLog ${root_path}/${domain}/logs/error.apache.log
   LogLevel info
   CustomLog ${root_path}/${domain}/logs/access.log combined
 	php_flag log_errors on
@@ -209,7 +211,7 @@ if [ ! -z "${REMOTE}" ]; then
 	# create apache vhost, this also triggers setup_php
 	ssh "${REMOTE}" "/root/scripts/setup_domain.sh -s '${DOMAIN} ${NEWHOME}'"
 	# start the rsync
-	rsync --itemize-changes --archive --stats "${DIR}/" -e 'ssh -i /root/.ssh/id_rsa' "root@${REMOTE}:${NEWHOME}/${DOMAIN}/${htdocs}"
+	rsync --itemize-changes --archive --stats "${DIR}/" -e 'ssh -i /root/.ssh/id_rsa' "root@${REMOTE}:${NEWHOME}/${DOMAIN}/htdocs"
 	# set the permissions again
 	ssh "${REMOTE}" "chown --recursive ${DOMAIN}:${DOMAIN} ${NEWHOME}/${DOMAIN}"
 fi
