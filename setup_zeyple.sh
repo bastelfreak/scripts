@@ -62,7 +62,7 @@ END
 fi
 
 # Postfix fuer zeyple vorbereiten: master.cf und main.cf um die Filtereintraege rweitern
-if ! grep -quiet zeyple /etc/postfix/master.cf; then
+if ! grep --quiet zeyple /etc/postfix/master.cf; then
 cat >> /etc/postfix/master.cf <<END
 zeyple  unix  -  n  n  -  -  pipe
   user=zeyple argv=/usr/local/bin/zeyple.py
@@ -80,7 +80,7 @@ echo "/etc/postfix/master.cf wurde angepasst"
 fi
 
 # Damit Zeyple die Schluessel richtig zuordnet, empfiehlt es sich, die interne Mail-Adresse fuer eingehende Mails auf die externe umzuleiten
-if ! grep -quiet "^$INT_ADDRESS\ $EXT_ADDRESS" /etc/postfix/recipient_canonical; then
+if ! grep --quiet "^$INT_ADDRESS\ $EXT_ADDRESS" /etc/postfix/recipient_canonical; then
 	echo "$INT_ADDRESS $EXT_ADDRESS" >> /etc/postfix/recipient_canonical
 	# Die Postfix-Empfaengerdatenbank neu erstellen
 	postmap /etc/postfix/recipient_canonical
@@ -88,7 +88,7 @@ fi
 
 
 # Datenbank in der Postfix-Adressenumschreibung bekannt machen und den Contentfilter eintragen
-if ! grep -quiet zeyple /etc/postfix/main.cf; then
+if ! grep --quiet zeyple /etc/postfix/main.cf; then
 	echo "recipient_canonical_maps = hash:/etc/postfix/recipient_canonical" >> /etc/postfix/main.cf
 	echo "content_filter = zeyple" >> /etc/postfix/main.cf
 	echo "/etc/postfix/main.cf wurde angepasst"
