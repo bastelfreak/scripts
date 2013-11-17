@@ -204,7 +204,7 @@ if [ ! -z "${REMOTE}" ]; then
 	# copy ssh key ## TODO: check if the key already exists on the destination
 	ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE}
 	# create remote user
-	ssh "${REMOTE}  '/root/scripts/setup_domain.sh -a ${DOMAIN} ${NEWHOME}'"
+	ssh "${REMOTE} '/root/scripts/setup_domain.sh -a ${DOMAIN} ${NEWHOME}'"
 	# create directories
 	ssh "${REMOTE} '/root/scripts/setup_domain.sh -c ${DOMAIN} ${NEWHOME}'"
 	# create apache vhost, this also triggers setup_php
