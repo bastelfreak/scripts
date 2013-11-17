@@ -11,13 +11,17 @@
 set -e
 
 setup_php() {
-	#$1 is something lile 'google.de /home'
-	if [ -z "${1}" ]; then
+	# TODO: set suitable rights for the new config file
+	# $1 is something like 9001 # the port for the fcgi
+	# $2 is the domain name
+	if [ -z "${1}" ] || [ -z "${2}" ]; then
 		exit 1
 	fi
-	local domain=${1%% *}
-	local root_path=${1#* }
-	touch /etc/php5/fpm/pool.d/"${domain}".conf
+	local domain="${2}"
+	local port="${1}"
+	local config="/etc/php5/fpm/pool.d/${domain}.conf"
+	if [ ! -e "${config}" ]; then
+		touch /etc/php5/fpm/pool.d/"${domain}".conf
 cat >> "/etc/php5/fpm/pool.d/${domain}.conf" <<END
 [${domain}]
 user = ${domain}
@@ -30,7 +34,8 @@ pm.min_spare_servers = 1
 pm.max_spare_servers = 3
 chdir = /
 END
-	service php5-fpm force-reload
+		service php5-fpm force-reload
+	fi
 }
 
 add_domain_to_dns() {
@@ -45,8 +50,6 @@ create_user() {
 	fi
 	local domain=${1%% *}
 	local root_path=${1#* }
-	echo "${domain}"
-	echo "${root_path}"
 	# create password and echo it
 	#local pw="$(openssl rand -hex 16)"
 	#local pwhash="$(openssl passwd -crypt ${PW})"
@@ -54,17 +57,19 @@ create_user() {
 	# create user, set pw, disable shell, create home and group
 	#useradd --shell /bin/false --create-home --home=${root_path}/${domain} --user-group --password ${pwhash} ${domain}
 	#useradd --shell /bin/false --create-home --home="${root_path}/${domain}" --user-group --disabled-password --gecos "" "${domain}"
-	adduser --force-badname --disabled-password --group --gecos "" --home "${root_path}/${domain}" --shell /bin/bash "${domain}"
+	if ! grep -quiet "${domain}" /etc/passwd; then
+		adduser --force-badname --disabled-password --group --gecos "" --home "${root_path}/${domain}" --shell /bin/bash "${domain}"
+	fi
 }
 
 create_directories() {
-	# $1 is something lile 'google.de /home'
+	# $1 is something like 'google.de /home'
 	if [ -z "${1}" ]; then
 		exit 1
 	fi
 	local domain=${1%% *}
 	local root_path=${1#* }
-	mkdir -p "${root_path}/${domain}/{htdocs,logs,config,tmp}"
+	mkdir -p "${root_path}/${domain}/{htdocs,logs,config,tmp}" > /dev/null
 	chown --recursive "${domain}:${domain}" "${root_path}/${domain}"
 	chown 755 --recursive "${root_path}/${domain}"
 }
@@ -83,7 +88,7 @@ get_highest_fpm_port() {
 
 add_apache_vhost() {
 	local port="$(get_highest_fpm_port)"
-	# $1 is something lile 'google.de /home'
+	# $1 is something like 'google.de /home'
 	if [ -z "${1}" ] || [ -z "${port}" ]; then
 		exit 1
 	fi
@@ -128,7 +133,7 @@ output_help() {
 	echo "you are using my awesome script, thanks :)"
 	echo "Usage is easy:"
 	echo "-h ## prints this help"
-	echo "-r new-server.de ## script will copy a website to this server, also needs --dir and --domain"
+	echo "-r new-server.de ## script will copy a website to this server, also needs -d, -n and -o"
 	echo "-o /var/www ## local path to the root directory of the website that we want to copy, e.g. /var/www/"
 	echo "-d example.com ## fqdn for the site to setup, this will be the linux user on the new system"
 	echo "-n /home/awesomedirformanynewsites ## this will be the new home directory for our website. here we place the site itself, logs, configs"
@@ -208,5 +213,5 @@ if [ ! -z "${REMOTE}" ]; then
 	# start the rsync
 	rsync --itemize-changes --archive --stats "${DIR}/" -e 'ssh -i /root/.ssh/id_rsa' "root@${REMOTE}:${NEWHOME}/${DOMAIN}/${htdocs}"
 	# set the permissions again
-	ssh "${REMOTE} 'chown --recursive ${DOMAIN}:${DOMAIN} ${NEWHOME}:${NEWHOME}'"
+	ssh "${REMOTE}" "chown --recursive ${DOMAIN}:${DOMAIN} ${NEWHOME}:${NEWHOME}"
 fi
