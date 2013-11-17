@@ -114,11 +114,11 @@ output_help() {
 	echo "written by Tim 'bastelfreak' Meusel <tim@online-mail.biz>"
 	echo "you are using my awesome script, thanks :)"
 	echo "Usage is easy:"
-	echo "-h/--help ## prints this help"
-	echo "-r/--remote new-server.de ## script will copy a website to this server, also needs --dir and --domain"
-	echo "--dir ## local path to the root directory of the website that we want to copy, e.g. /var/www/"
-	echo "--domain ## fqdn for the site to setup, this will be the linux user on the new system"
-	echo "-n/--newhome ## this will be the new home directory for our website. here we place the site itself, logs, configs"
+	echo "-h ## prints this help"
+	echo "-r new-server.de ## script will copy a website to this server, also needs --dir and --domain"
+	echo "-o /var/www ## local path to the root directory of the website that we want to copy, e.g. /var/www/"
+	echo "-d example.com ## fqdn for the site to setup, this will be the linux user on the new system"
+	echo "-n /home/awesomedirformanynewsites ## this will be the new home directory for our website. here we place the site itself, logs, configs"
 	echo ""
 }
 ##
@@ -131,18 +131,18 @@ if [ -z "${1}" ]; then
 	exit 0
 fi
 
-while getopts ":h:help:?:r:remote:dir:domain:n:newhome:webserver:add-user:setup-vhost:create-directories:" opt; do
+while getopts ":h:r:o:d:n:w:a:s:c:" opt; do
 	case "${opt}" in
-		h|help ) output_help; exit 0;;
-		r|remote ) REMOTE="${OPTARG}";;
-		dir ) DIR="${OPTARG}";;
-		domain ) DOMAIN="${OPTARG}";;
-		n|newhome ) NEWHOME="${OPTARG}";;
-		webserver ) WEBSERVER="${OPTARG}";; # thats currently not supported, you have to use apache
+		h ) output_help; exit 0;;
+		r ) REMOTE="${OPTARG}";;
+		o ) DIR="${OPTARG}";;
+		d ) DOMAIN="${OPTARG}";;
+		n ) NEWHOME="${OPTARG}";;
+		w ) WEBSERVER="${OPTARG}";; # thats currently not supported, you have to use apache
 		# define function calls
-		add-user ) [ -z "${REMOTE}" ] && create_user "${OPTARG}" || exit 1;;
-		setup-vhost ) [ -z "${REMOTE}" ] && add_apache_vhost "${OPTARG}" || exit 1;;
-		create-directories ) [ -z "${REMOTE}" ] && create_directories "${OPTARG}" || exit 1;;
+		a ) [ -z "${REMOTE}" ] && create_user "${OPTARG}" || exit 1;;
+		s ) [ -z "${REMOTE}" ] && add_apache_vhost "${OPTARG}" || exit 1;;
+		c ) [ -z "${REMOTE}" ] && create_directories "${OPTARG}" || exit 1;;
 		: ) echo "something is wrong with the parameters"; exit 1;;
 	esac
 done
@@ -157,26 +157,26 @@ if [ ! -z "${REMOTE}" ]; then
 	echo "Important: remote servers sshd has to be on port 22"
 	# check for some vars
 	if [ -z "${DIR}" ]; then
-		echo "your have to provide a path like '--dir /var/www', otherwise we can't copy anything"
+		echo "your have to provide a path like '-o /var/www', otherwise we can't copy anything"
 		exit 1;
 	elif [ ! -d "${DIR}" ]; then
 		echo "your provided path is not valid"
 		echo "${DIR}"
 		exit 1
 	fi 
-	echo "your --dir param seems valid"
+	echo "your -o param seems valid"
 	if [ -z "${DOMAIN}" ]; then
-		echo "you also have to provide the domain for the new vhost (--domain)"
+		echo "you also have to provide the domain for the new vhost (-d)"
 		exit 1
 	fi
-	echo "your --domain param seems valid"
+	echo "your -d param seems valid"
 	if [ -z "${NEWHOME}" ]; then
-		echo "you have to provide the new root path for the website (-n/--newhome)"
+		echo "you have to provide the new root path for the website (-n)"
 		exit 1
 	fi
-	echo "your -n/--newhome param seems valid"
+	echo "your -n param seems valid"
 	# check for ssh key, if none then create one
-	if [ ! -f "~/.ssh/id_rsa.pub" ]; then
+	if [ ! -f "/root/.ssh/id_rsa.pub" ] || [ ! -f "/root/.ssh/id_rsa" ]; then
 		ssh-keygen -b 8192 -N "" -f /root/.ssh/id_rsa -t rsa
 	fi
 
@@ -187,11 +187,11 @@ if [ ! -z "${REMOTE}" ]; then
 	# copy ssh key
 	ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE}
 	# create remote user
-	ssh "${REMOTE}" '/root/scripts/setup_domain.sh --add-user "${DOMAIN}" "${NEWHOME}"'
+	ssh "${REMOTE}" '/root/scripts/setup_domain.sh -a "${DOMAIN}" "${NEWHOME}"'
 	# create directories
-	ssh "${REMOTE}" '/root/scripts/setup_domain.sh --create-directories "${DOMAIN}" "${NEWHOME}"'
+	ssh "${REMOTE}" '/root/scripts/setup_domain.sh -c "${DOMAIN}" "${NEWHOME}"'
 	# create apache vhost, this also triggers setup_php
-	ssh "${REMOTE}" '/root/scripts/setup_domain.sh --setup-vhost "${DOMAIN}" "${NEWHOME}"'
+	ssh "${REMOTE}" '/root/scripts/setup_domain.sh -s "${DOMAIN}" "${NEWHOME}"'
 	# start the rsync
-	rsync -a --stats "${DIR}" -e 'ssh -i /root/.ssh/id_rsa root@${REMOTE}' 
+	rsync --itemize-changes --archive --stats "${DIR}/" -e 'ssh -i /root/.ssh/id_rsa ' "root@${REMOTE}:${NEWHOME}/${DOMAIN}/${htdocs}"
 fi
