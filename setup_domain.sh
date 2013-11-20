@@ -70,9 +70,10 @@ create_directories() {
 	fi
 	local domain=${1%% *}
 	local root_path=${1#* }
-	mkdir -p "${root_path}/${domain}/htdocs/tmp"
-	mkdir -p "${root_path}/${domain}/htdocs/config"
-	mkdir -p "${root_path}/${domain}/htdocs/logs"
+	mkdir -p "${root_path}/${domain}/htdocs"
+	mkdir -p "${root_path}/${domain}/tmp"
+	mkdir -p "${root_path}/${domain}/config"
+	mkdir -p "${root_path}/${domain}/logs"
 	chown --recursive "${domain}:${domain}" "${root_path}/${domain}"
 	chmod 755 --recursive "${root_path}/${domain}"
 }
@@ -95,9 +96,10 @@ add_apache_vhost() {
 	if [ -z "${1}" ] || [ -z "${port}" ]; then
 		exit 1
 	fi
-	local domain=${1%% *}
-	local root_path=${1#* }
-	let PORT++
+	if [-f "/etc/apache2/sites-available/${domain}" ]; then
+		local domain=${1%% *}
+		local root_path=${1#* }
+		let PORT++
 cat >> "/etc/apache2/sites-available/${domain}" <<END
 <VirtualHost *:80>
 	DocumentRoot ${root_path}/${domain}/htdocs
@@ -112,8 +114,8 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 	ErrorLog ${root_path}/${domain}/logs/error.apache.log
   LogLevel info
   CustomLog ${root_path}/${domain}/logs/access.log combined
-	php_flag log_errors on
-	php_value error_log ${root_path}/${domain}/logs/error.php.log
+	#php_flag log_errors on
+	#php_value error_log ${root_path}/${domain}/logs/error.php.log
 <IfModule mod_fastcgi.c>
 	AddHandler php5-fcgi .php
 	Action php5-fcgi /php5-fcgi
@@ -122,8 +124,9 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 </IfModule>
 </VirtualHost>
 END
-	setup_php "${port}" "${domain}"
-	/usr/sbin/a2ensite "${domain}"
+		setup_php "${port}" "${domain}"
+		/usr/sbin/a2ensite "${domain}"
+	fi
 }
 
 add_lighttpd_vhost() {
