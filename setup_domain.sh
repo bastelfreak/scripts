@@ -19,6 +19,7 @@ setup_php() {
 	fi
 	local domain="${2}"
 	local port="${1}"
+	local root_path="${3}"
 	local config="/etc/php5/fpm/pool.d/${domain}.conf"
 	if [ ! -e "${config}" ]; then
 		touch /etc/php5/fpm/pool.d/"${domain}".conf
@@ -33,6 +34,8 @@ pm.start_servers = 2
 pm.min_spare_servers = 1
 pm.max_spare_servers = 3
 chdir = /
+php_admin_flag[log_errors] = on
+php_admin_value[error_log] = ${root_path}/${domain}/logs/error.php.log
 END
 		service php5-fpm force-reload
 	fi
@@ -114,8 +117,6 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 	ErrorLog ${root_path}/${domain}/logs/error.apache.log
   LogLevel info
   CustomLog ${root_path}/${domain}/logs/access.log combined
-	#php_flag log_errors on
-	#php_value error_log ${root_path}/${domain}/logs/error.php.log
 <IfModule mod_fastcgi.c>
 	AddHandler php5-fcgi .php
 	Action php5-fcgi /php5-fcgi
@@ -124,7 +125,7 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 </IfModule>
 </VirtualHost>
 END
-		setup_php "${port}" "${domain}"
+		setup_php "${port}" "${domain}" "${root_path}"
 		/usr/sbin/a2ensite "${domain}"
 	fi
 }
