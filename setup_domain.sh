@@ -53,15 +53,7 @@ create_user() {
 	fi
 	local domain=${1%% *}
 	local root_path=${1#* }
-	# create password and echo it
-	#local pw="$(openssl rand -hex 16)"
-	#local pwhash="$(openssl passwd -crypt ${PW})"
-	#echo "the new password is ${pw}"
-	# create user, set pw, disable shell, create home and group
-	#useradd --shell /bin/false --create-home --home=${root_path}/${domain} --user-group --password ${pwhash} ${domain}
-	#useradd --shell /bin/false --create-home --home="${root_path}/${domain}" --user-group --disabled-password --gecos "" "${domain}"
 	if ! grep --quiet "${domain}" /etc/passwd; then
-		#adduser --force-badname --disabled-password --group --gecos "" --home "${root_path}/${domain}" --shell /bin/bash "${domain}"
 		adduser --force-badname --disabled-password --gecos "" --home "${root_path}/${domain}" --shell /bin/bash "${domain}"
 	fi
 }
@@ -119,9 +111,8 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
   CustomLog ${root_path}/${domain}/logs/access.log combined
 <IfModule mod_fastcgi.c>
 	AddHandler php5-fcgi .php
-	Action php5-fcgi /php5-fcgi
-	Alias /php5-fcgi /usr/lib/cgi-bin/php5-fcgi
-	FastCgiExternalServer /usr/lib/cgi-bin/php5-fcgi -host 127.0.0.1:${port} -pass-header Authorization
+	Action php5-fcgi /cgi-bin/php5-fcgi
+	FastCgiExternalServer ${root_path}/${domain}/htdocs/cgi-bin/php5-fcgi -host 127.0.0.1:${port} -pass-header Authorization
 </IfModule>
 </VirtualHost>
 END
