@@ -21,7 +21,7 @@ setup_php() {
 	local port="${1}"
 	local root_path="${3}"
 	local config="/etc/php5/fpm/pool.d/${domain}.conf"
-	if [ ! -e "${config}" ]; then
+	if [ ! -f "${config}" ]; then
 		touch /etc/php5/fpm/pool.d/"${domain}".conf
 cat >> "/etc/php5/fpm/pool.d/${domain}.conf" <<END
 [${domain}]
@@ -99,10 +99,10 @@ add_apache_vhost() {
 	if [ -z "${1}" ] || [ -z "${port}" ]; then
 		exit 1
 	fi
-	if [-f "/etc/apache2/sites-available/${domain}" ]; then
-		local domain=${1%% *}
-		local root_path=${1#* }
-		let PORT++
+	local domain=${1%% *}
+	local root_path=${1#* }
+	let PORT++
+	if [ ! -f "/etc/apache2/sites-available/${domain}" ]; then
 cat >> "/etc/apache2/sites-available/${domain}" <<END
 <VirtualHost *:80>
 	DocumentRoot ${root_path}/${domain}/htdocs
@@ -125,9 +125,10 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 </IfModule>
 </VirtualHost>
 END
-		setup_php "${port}" "${domain}" "${root_path}"
 		/usr/sbin/a2ensite "${domain}"
 	fi
+	setup_php "${port}" "${domain}" "${root_path}"
+
 }
 
 add_lighttpd_vhost() {
@@ -206,8 +207,17 @@ if [ ! -z "${REMOTE}" ]; then
 	# the following part has to be more beautiful, we have to handle exit codes
 	##
 
-	# copy ssh key ## TODO: check if the key already exists on the destination
-	ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE}
+	# copy ssh key
+	ssh -q "${REMOTE}" exit
+	if [ $? != 0 ]; then
+		ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE}
+	fi
+	# check if ssh is working
+	ssh -q "${REMOTE}" exit
+	if [ $? != 0 ]; then
+		echo "Remote Login via ssh didn't work"
+		exit 1
+	fi
 	# create remote user
 	ssh "${REMOTE}" "/root/scripts/setup_domain.sh -a '${DOMAIN} ${NEWHOME}'"
 	# create directories
