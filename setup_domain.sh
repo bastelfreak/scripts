@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ##
-# written by Tim Meusel, 07.09.2013
-# improved and audited from aibo
+# written by Tim Meusel, initial start 07.09.2013
+# improved and audited by aibo
 # this script has to be placed on a webserver to add new vhosts and dns records
 # you can place a copy of this script on two servers and migrate websites from one host to another
 ##
@@ -11,9 +11,6 @@
 set -e
 
 setup_php() {
-	# TODO: set suitable rights for the new config file
-	# $1 is something like 9001 # the port for the fcgi
-	# $2 is the domain name
 	if [ -z "${1}" ] || [ -z "${2}" ]; then
 		exit 1
 	fi
