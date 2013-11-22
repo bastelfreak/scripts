@@ -108,7 +108,7 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 	DocumentRoot ${root_path}/${domain}/htdocs
 	ServerName ${domain}.de
   ServerAdmin admin@${domain}
-	<Directory ${root_patch}/${domain}/htdocs>
+	<Directory ${root_path}/${domain}/htdocs>
 		Options -Indexes
     Order allow,deny
     allow from all
