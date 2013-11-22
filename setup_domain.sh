@@ -98,7 +98,7 @@ add_apache_vhost() {
 cat >> "/etc/apache2/sites-available/${domain}" <<END
 <VirtualHost *:80>
 	DocumentRoot ${root_path}/${domain}/htdocs
-	ServerName ${domain}.de
+	ServerName ${domain}
   ServerAdmin admin@${domain}
 	<Directory ${root_path}/${domain}/htdocs>
 		Options -Indexes
