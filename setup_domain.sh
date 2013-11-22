@@ -109,11 +109,29 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 	ErrorLog ${root_path}/${domain}/logs/error.apache.log
   LogLevel info
   CustomLog ${root_path}/${domain}/logs/access.log combined
-<IfModule mod_fastcgi.c>
-	AddHandler php5-fcgi .php
-	Action php5-fcgi /cgi-bin/php5-fcgi
-	FastCgiExternalServer ${root_path}/${domain}/htdocs/cgi-bin/php5-fcgi -host 127.0.0.1:${port} -pass-header Authorization
-</IfModule>
+  CustomLog /home/files.bastelfreak.de/logs/access.log combined
+	# Set handlers for PHP files.
+	# application/x-httpd-php                        phtml pht php
+	# application/x-httpd-php3                       php3
+	# application/x-httpd-php4                       php4
+	# application/x-httpd-php5                       php
+	<FilesMatch ".+\.ph(p[345]?|t|tml)$">
+		SetHandler application/x-httpd-php
+	</FilesMatch>
+	# Define Action and Alias needed for FastCGI external server.
+	Action application/x-httpd-php /fcgi-bin/php5-fpm virtual
+	Alias /fcgi-bin/php5-fpm /fcgi-bin-php5-fpm
+	<Location /fcgi-bin/php5-fpm>
+		# here we prevent direct access to this Location url,
+		# env=REDIRECT_STATUS will let us use this fcgi-bin url
+		# only after an internal redirect (by Action upper)
+		Order Deny,Allow
+		Deny from All
+		Allow from env=REDIRECT_STATUS
+	</Location>
+	<IfModule mod_fastcgi.c>
+		FastCgiExternalServer /fcgi-bin-php5-fpm -host 127.0.0.1:${port} -pass-header Authorization
+	</IfModule>
 </VirtualHost>
 END
 		/usr/sbin/a2ensite "${domain}"
