@@ -127,7 +127,7 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 		Allow from env=REDIRECT_STATUS
 	</Location>
 	<IfModule mod_fastcgi.c>
-		FastCgiExternalServer /fcgi-bin-php5-fpm -host 127.0.0.1:${port} -pass-header Authorization
+		FastCgiExternalServer /fcgi-bin-php5-fpm -host 127.0.0.1:${port} -pass-header Authorization -user ${domain} -group ${domain}
 	</IfModule>
 </VirtualHost>
 END
