@@ -53,6 +53,7 @@ create_user() {
 	if ! grep --quiet "${domain}" /etc/passwd; then
 		adduser --force-badname --disabled-password --gecos "" --home "${root_path}/${domain}" --shell /bin/bash "${domain}"
 		usermod --append --groups "${domain}" www-data
+		usermod --append --groups www-data "${domain}"
 	fi
 }
 
