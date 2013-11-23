@@ -131,7 +131,7 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 		# throws error, so disabled:
 		# [warn] FastCGI: there is no fastcgi wrapper set, user/group options are ignored
 		#FastCgiExternalServer /fpm-${domain} -host 127.0.0.1:${port} -pass-header Authorization -user ${domain} -group ${domain}
-		FastCgiExternalServer /fpm-${domain} -host 127.0.0.1:${port} -pass-header Authorization -user ${domain} -group ${domain}
+		FastCgiExternalServer /fpm-${domain} -host 127.0.0.1:${port} -pass-header Authorization
 	</IfModule>
 </VirtualHost>
 END
