@@ -117,7 +117,7 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 	</FilesMatch>
 	# Define Action and Alias needed for FastCGI external server.
 	Action application/x-httpd-php /fcgi-bin/php5-fpm virtual
-	Alias /fcgi-bin/php5-fpm /fcgi-bin-php5-fpm
+	Alias /fcgi-bin/php5-fpm /fpm-${domain}
 	<Location /fcgi-bin/php5-fpm>
 		# here we prevent direct access to this Location url,
 		# env=REDIRECT_STATUS will let us use this fcgi-bin url
@@ -127,7 +127,10 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 		Allow from env=REDIRECT_STATUS
 	</Location>
 	<IfModule mod_fastcgi.c>
-		FastCgiExternalServer /fcgi-bin-php5-fpm -host 127.0.0.1:${port} -pass-header Authorization -user ${domain} -group ${domain}
+		# throws error, so disabled:
+		# [warn] FastCGI: there is no fastcgi wrapper set, user/group options are ignored
+		#FastCgiExternalServer /fpm-${domain} -host 127.0.0.1:${port} -pass-header Authorization -user ${domain} -group ${domain}
+		FastCgiExternalServer /fpm-${domain} -host 127.0.0.1:${port} -pass-header Authorization -user ${domain} -group ${domain}
 	</IfModule>
 </VirtualHost>
 END
