@@ -220,16 +220,23 @@ if [ ! -z "${REMOTE}" ]; then
 	##
 
 	# copy ssh key
-	ssh -q "${REMOTE}" exit
-	if [ $? != 0 ]; then
+	echo "test if ssh via key works"
+	ssh -o BatchMode=yes -q "${REMOTE}" exit
+	local code=$?
+	echo "exit code is ${code}"
+	if [ "${code}" != 0 ]; then
+		echo "now we copy the key"
 		ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE}
 	fi
 	# check if ssh is working
-	ssh -q "${REMOTE}" exit
-	if [ $? != 0 ]; then
+	echo "we do another ssh test"
+	ssh -o BatchMode=yes -q "${REMOTE}" exit
+	code=$?
+	if [ ${code} != 0 ]; then
 		echo "Remote Login via ssh didn't work"
 		exit 1
 	fi
+	echo "ssh is working"
 	# create remote user
 	ssh "${REMOTE}" "/root/scripts/setup_domain.sh -a '${DOMAIN} ${NEWHOME}'"
 	# create directories
