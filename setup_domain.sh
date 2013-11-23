@@ -132,6 +132,7 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 </VirtualHost>
 END
 		/usr/sbin/a2ensite "${domain}"
+		service apache2 reload
 	fi
 	setup_php "${port}" "${domain}" "${root_path}"
 
