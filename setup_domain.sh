@@ -221,8 +221,10 @@ if [ ! -z "${REMOTE}" ]; then
 
 	# copy ssh key
 	echo "test if ssh via key works"
-	ssh -o BatchMode=yes -q "${REMOTE}" exit
-	local code=$?
+	set +e
+	ssh -o BatchMode=yes -q "${REMOTE}" true
+	code="${?}"
+	set -e
 	echo "exit code is ${code}"
 	if [ "${code}" != 0 ]; then
 		echo "now we copy the key"
@@ -230,8 +232,10 @@ if [ ! -z "${REMOTE}" ]; then
 	fi
 	# check if ssh is working
 	echo "we do another ssh test"
-	ssh -o BatchMode=yes -q "${REMOTE}" exit
-	code=$?
+	set +e
+	ssh -o BatchMode=yes -q "${REMOTE}" true
+	code="${?}"
+	set -e
 	if [ ${code} != 0 ]; then
 		echo "Remote Login via ssh didn't work"
 		exit 1
