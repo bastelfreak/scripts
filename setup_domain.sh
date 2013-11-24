@@ -159,6 +159,10 @@ output_help() {
 	echo "-n /home/awesomedirformanynewsites ## this will be the new home directory for our website. here we place the site itself, logs, configs"
 	echo ""
 }
+
+can_login() { 
+	ssh -o BatchMode=yes -q "${REMOTE}" true && return 0 || return $?
+}
 ##
 # under this line, the real magic is gonna happen
 ##
@@ -213,34 +217,11 @@ if [ ! -z "${REMOTE}" ]; then
 	# check for ssh key, if none then create one
 	if [ ! -f "/root/.ssh/id_rsa.pub" ] || [ ! -f "/root/.ssh/id_rsa" ]; then
 		ssh-keygen -b 8192 -N "" -f /root/.ssh/id_rsa -t rsa
+		echo "We generated a ssh keypair"
 	fi
-
-	##
-	# the following part has to be more beautiful, we have to handle exit codes
-	##
-
-	# copy ssh key
-	echo "test if ssh via key works"
-	set +e
-	ssh -o BatchMode=yes -q "${REMOTE}" true
-	code="${?}"
-	set -e
-	echo "exit code is ${code}"
-	if [ "${code}" != 0 ]; then
-		echo "now we copy the key"
-		ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE}
-	fi
-	# check if ssh is working
-	echo "we do another ssh test"
-	set +e
-	ssh -o BatchMode=yes -q "${REMOTE}" true
-	code="${?}"
-	set -e
-	if [ ${code} != 0 ]; then
-		echo "Remote Login via ssh didn't work"
-		exit 1
-	fi
-	echo "ssh is working"
+	can_login || ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE};
+	can_login || exit 1
+	echo "ssh is working now"
 	# create remote user
 	ssh "${REMOTE}" "/root/scripts/setup_domain.sh -a '${DOMAIN} ${NEWHOME}'"
 	# create directories
