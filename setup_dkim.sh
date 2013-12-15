@@ -82,7 +82,8 @@ for SUBJECT in $(mysql --user="${USER}" --host="${HOST}" --password="${PASS}" "$
 	fi
 done
 chown opendkim:opendkim /etc/dkim/keys/* -R
-/etc/init.d/postfix reload 1> /dev/null
+service postfix restart 1> /dev/null
+service opendkim restart 1> /dev/null
 echo -e "${green}Processed ${TOTAL} subjects, ${NEW} are new${endColor}"
 if [ $(pgrep -f /usr/lib/postfix/master) ]; then
 	echo -e "${green}Postfix reload was also successfull. Postfix will now sign outgoing mails via opendkim. You have to add the TXT records to your zone file to allow other mailserver to verify your signature${endColor}"
