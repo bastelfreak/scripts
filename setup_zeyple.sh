@@ -29,10 +29,11 @@ mkdir -p /etc/zeyple/keys && chmod 700 /etc/zeyple/keys && chown zeyple: /etc/ze
 echo "Verzeichnisse wurden angelegt"
 
 # Das Python-Skript zeyple.py herunterladen
-if [ ! -e /usr/local/bin/zeyple.py ]; then
+# keine pruefung ob datei schon existiert, da wir die datei regelmaesig updaten wollen
+#if [ ! -e /usr/local/bin/zeyple.py ]; then
 	wget --quiet --output-document=/usr/local/bin/zeyple.py https://raw.github.com/infertux/zeyple/master/zeyple/zeyple.py;
 	chmod 744 /usr/local/bin/zeyple.py && chown zeyple: /usr/local/bin/zeyple.py;
-fi
+#fi
 # Konfigurationsdatei herunterladen und Rechte setzen
 if [ ! -e /etc/zeyple/zeyple.conf ]; then
 	wget --quiet --output-document=/etc/zeyple/zeyple.conf https://raw.github.com/infertux/zeyple/master/zeyple/zeyple.conf.example;
