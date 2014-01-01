@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ##
-# written by Tim Meusel, 07.09.2013
-# improved and audited from aibo
+# written by Tim Meusel, initial start 07.09.2013
+# improved and audited by aibo
 # this script has to be placed on a webserver to add new vhosts and dns records
 # you can place a copy of this script on two servers and migrate websites from one host to another
 ##
@@ -11,9 +11,6 @@
 set -e
 
 setup_php() {
-	# TODO: set suitable rights for the new config file
-	# $1 is something like 9001 # the port for the fcgi
-	# $2 is the domain name
 	if [ -z "${1}" ] || [ -z "${2}" ]; then
 		exit 1
 	fi
@@ -21,7 +18,7 @@ setup_php() {
 	local port="${1}"
 	local root_path="${3}"
 	local config="/etc/php5/fpm/pool.d/${domain}.conf"
-	if [ ! -e "${config}" ]; then
+	if [ ! -f "${config}" ]; then
 		touch /etc/php5/fpm/pool.d/"${domain}".conf
 cat >> "/etc/php5/fpm/pool.d/${domain}.conf" <<END
 [${domain}]
@@ -53,16 +50,10 @@ create_user() {
 	fi
 	local domain=${1%% *}
 	local root_path=${1#* }
-	# create password and echo it
-	#local pw="$(openssl rand -hex 16)"
-	#local pwhash="$(openssl passwd -crypt ${PW})"
-	#echo "the new password is ${pw}"
-	# create user, set pw, disable shell, create home and group
-	#useradd --shell /bin/false --create-home --home=${root_path}/${domain} --user-group --password ${pwhash} ${domain}
-	#useradd --shell /bin/false --create-home --home="${root_path}/${domain}" --user-group --disabled-password --gecos "" "${domain}"
 	if ! grep --quiet "${domain}" /etc/passwd; then
-		#adduser --force-badname --disabled-password --group --gecos "" --home "${root_path}/${domain}" --shell /bin/bash "${domain}"
 		adduser --force-badname --disabled-password --gecos "" --home "${root_path}/${domain}" --shell /bin/bash "${domain}"
+		usermod --append --groups "${domain}" www-data
+		usermod --append --groups www-data "${domain}"
 	fi
 }
 
@@ -99,16 +90,16 @@ add_apache_vhost() {
 	if [ -z "${1}" ] || [ -z "${port}" ]; then
 		exit 1
 	fi
-	if [-f "/etc/apache2/sites-available/${domain}" ]; then
-		local domain=${1%% *}
-		local root_path=${1#* }
-		let PORT++
+	local domain=${1%% *}
+	local root_path=${1#* }
+	let port++
+	if [ ! -f "/etc/apache2/sites-available/${domain}" ]; then
 cat >> "/etc/apache2/sites-available/${domain}" <<END
 <VirtualHost *:80>
 	DocumentRoot ${root_path}/${domain}/htdocs
-	ServerName ${domain}.de
+	ServerName ${domain}
   ServerAdmin admin@${domain}
-	<Directory ${root_patch}/${domain}/htdocs>
+	<Directory ${root_path}/${domain}/htdocs>
 		Options -Indexes
     Order allow,deny
     allow from all
@@ -117,17 +108,39 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 	ErrorLog ${root_path}/${domain}/logs/error.apache.log
   LogLevel info
   CustomLog ${root_path}/${domain}/logs/access.log combined
-<IfModule mod_fastcgi.c>
-	AddHandler php5-fcgi .php
-	Action php5-fcgi /php5-fcgi
-	Alias /php5-fcgi /usr/lib/cgi-bin/php5-fcgi
-	FastCgiExternalServer /usr/lib/cgi-bin/php5-fcgi -host 127.0.0.1:${port} -pass-header Authorization
-</IfModule>
+  CustomLog /home/files.bastelfreak.de/logs/access.log combined
+	# Set handlers for PHP files.
+	# application/x-httpd-php                        phtml pht php
+	# application/x-httpd-php3                       php3
+	# application/x-httpd-php4                       php4
+	# application/x-httpd-php5                       php
+	<FilesMatch ".+\.ph(p[345]?|t|tml)$">
+		SetHandler application/x-httpd-php
+	</FilesMatch>
+	# Define Action and Alias needed for FastCGI external server.
+	Action application/x-httpd-php /fcgi-bin/php5-fpm virtual
+	Alias /fcgi-bin/php5-fpm /fpm-${domain}
+	<Location /fcgi-bin/php5-fpm>
+		# here we prevent direct access to this Location url,
+		# env=REDIRECT_STATUS will let us use this fcgi-bin url
+		# only after an internal redirect (by Action upper)
+		Order Deny,Allow
+		Deny from All
+		Allow from env=REDIRECT_STATUS
+	</Location>
+	<IfModule mod_fastcgi.c>
+		# throws error, so disabled:
+		# [warn] FastCGI: there is no fastcgi wrapper set, user/group options are ignored
+		#FastCgiExternalServer /fpm-${domain} -host 127.0.0.1:${port} -pass-header Authorization -user ${domain} -group ${domain}
+		FastCgiExternalServer /fpm-${domain} -host 127.0.0.1:${port} -pass-header Authorization
+	</IfModule>
 </VirtualHost>
 END
-		setup_php "${port}" "${domain}" "${root_path}"
 		/usr/sbin/a2ensite "${domain}"
+		service apache2 reload
 	fi
+	setup_php "${port}" "${domain}" "${root_path}"
+
 }
 
 add_lighttpd_vhost() {
@@ -145,6 +158,10 @@ output_help() {
 	echo "-d example.com ## fqdn for the site to setup, this will be the linux user on the new system"
 	echo "-n /home/awesomedirformanynewsites ## this will be the new home directory for our website. here we place the site itself, logs, configs"
 	echo ""
+}
+
+can_login() { 
+	ssh -o BatchMode=yes -q "${REMOTE}" true && return 0 || return $?
 }
 ##
 # under this line, the real magic is gonna happen
@@ -200,14 +217,11 @@ if [ ! -z "${REMOTE}" ]; then
 	# check for ssh key, if none then create one
 	if [ ! -f "/root/.ssh/id_rsa.pub" ] || [ ! -f "/root/.ssh/id_rsa" ]; then
 		ssh-keygen -b 8192 -N "" -f /root/.ssh/id_rsa -t rsa
+		echo "We generated a ssh keypair"
 	fi
-
-	##
-	# the following part has to be more beautiful, we have to handle exit codes
-	##
-
-	# copy ssh key ## TODO: check if the key already exists on the destination
-	ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE}
+	can_login || ssh-copy-id -i ~/.ssh/id_rsa.pub ${REMOTE};
+	can_login || exit 1
+	echo "ssh is working now"
 	# create remote user
 	ssh "${REMOTE}" "/root/scripts/setup_domain.sh -a '${DOMAIN} ${NEWHOME}'"
 	# create directories

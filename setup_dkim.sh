@@ -13,7 +13,7 @@ MYSQLFILE="/etc/postfix/mysql-virtual-alias-maps.cf"
 USER=$(awk '/^user/ {print $3}' ${MYSQLFILE})
 PASS=$(awk '/^password/ {print $3}' ${MYSQLFILE})
 HOST=$(awk '/^hosts/ {print $3}' ${MYSQLFILE})
-PASS=$(awk '/^dbname/ {print $3}' ${MYSQLFILE})
+DB=$(awk '/^dbname/ {print $3}' ${MYSQLFILE})
 QUERY="(SELECT virtual_aliases.source as subject FROM \`virtual_aliases\`) UNION DISTINCT (SELECT virtual_aliases.destination as subject FROM \`virtual_aliases\`) UNION DISTINCT (SELECT virtual_users.email as subject FROM \`virtual_users\`) ORDER BY \`SUBJECT\` ASC"
 CONF_DIR="/etc/opendkim"
 SENDER_MAP="${CONF_DIR}/SigningTable"
@@ -27,8 +27,8 @@ NEW=0
 green="\e[0;32m"
 orange="\e[0;33m"
 endColor="\e[0m"
-aptitude install -y opendkim mysql-client 1> /dev/null
-mkdir "${CONF_DIR}"
+aptitude install -y opendkim opendkim-tools mysql-client 1> /dev/null
+mkdir "${CONF_DIR}" 2> /dev/null
 if [ ! -e "${SENDER_MAP}" ]; then
 	touch "${SENDER_MAP}"
 fi
@@ -68,11 +68,11 @@ for SUBJECT in $(mysql --user="${USER}" --host="${HOST}" --password="${PASS}" "$
 	if [ -z "${STRING}" ]; then
 		(( NEW++ ))
 		DOMAIN=$(echo "${SUBJECT}" | cut -d'@' -f2)
-		mkdir -p "${KEY_DIR}/${DOMAIN}"
+		mkdir -p "${KEY_DIR}/${DOMAIN}" > /dev/null
 		opendkim-genkey -S -r -s "${KEYNAME}" -b 2048 -d ${DOMAIN} -D "${KEY_DIR}/${DOMAIN}"
 		SUM=$(echo -n "${SUBJECT}" | sha512sum)
 		TXT_RECORD="${SUM:16:32}"
-		echo "${TXT_RECORD} ${DOMAIN}:${KEYNAME}:${KEY_DIR}/${DOMAIN}:${KEYNAME}" >> "${KEY_MAP}"
+		echo "${TXT_RECORD} ${DOMAIN}:${KEYNAME}:${KEY_DIR}/${DOMAIN}/${KEYNAME}.private" >> "${KEY_MAP}"
 		if [ "${SUBJECT:0:1}" == "@" ]; then
 			echo "*${SUBJECT} ${TXT_RECORD}" >> "${SENDER_MAP}"
 		else
@@ -81,8 +81,9 @@ for SUBJECT in $(mysql --user="${USER}" --host="${HOST}" --password="${PASS}" "$
 		echo -e "${green}Done with ${DOMAIN} ${endColor}"
 	fi
 done
-chown opendkim:opendkim /etc/dkim/keys/* -R
-/etc/init.d/postfix reload 1> /dev/null
+chown opendkim:opendkim /etc/opendkim/keys/* -R
+service postfix restart 1> /dev/null
+service opendkim restart 1> /dev/null
 echo -e "${green}Processed ${TOTAL} subjects, ${NEW} are new${endColor}"
 if [ $(pgrep -f /usr/lib/postfix/master) ]; then
 	echo -e "${green}Postfix reload was also successfull. Postfix will now sign outgoing mails via opendkim. You have to add the TXT records to your zone file to allow other mailserver to verify your signature${endColor}"
