@@ -1,49 +1,48 @@
 #!/bin/bash
 
 ##
-# written by Tim 'bastelfreak' Meusel (https://bastelfreak.de)
+# written by Tim 'bastelfreak' Meusel (http://bastelfreak.de)
 # installs zeyple (https://github.com/infertux/zeyple)
 # encrypts outgoing mails to $EXT_ADDRESS from $INT_ADDRESS with a public GPG Key. 
 # Usefull for sending e.g. cron mail
-# some more infos aren't available at my blog https://blog.bastelfreak.de
+# some more infos aren't available at my blog http://blog.bastelfreak.de
+# $INT_ADDRESS is currently root
 ##
 
-# Hier die interne Adresse eintragen, an welche die System-Mails normalerweise gehen
-INT_ADDRESS=$(whoami)@$(hostname -f)
-# EXT_ADDRESS definiert die externe Adresse, an die der Server die verschluesselten System-Mails versenden soll. 
-# Wichtig: Fuer diese Adresse muss ein oeffentlicher GPG-Schluessel auf dem Keyserver ($KEYSERVER_ADDRESS, siehe Zeile 9) zu finden sein
+INT_ADDRESS="root@$(hostname -f)"
+# zeyple looks for emails from INT_ADDRESS to EXT_ADRESS and crypts them with the public from from EXT_ADDRESS
+# the key for EXT_ADDRESS has to be on KEY_SERVER_ADDRESS
 EXT_ADDRESS=monitoring@bastelfreak.org
-# Die URL des Keyservers
+# URL to the public keyserver
 KEYSERVER_ADDRESS=pool.sks-keyservers.net
 
-# Abhaengigkeiten installieren
+# installing dependencies
 aptitude update 1>/dev/null && aptitude install -y sudo gpg python-gpgme 1>/dev/null
-echo "sudo, gpg und python-gpgme wurden installiert"
+echo "sudo, gpg and python-gpgme were already installed or got installed"
 
-# Anlegen des Systembenutzers, ohne Home-Directory und ohne Login- Erlaubnis
+# adding user for zeyple
 adduser --system --no-create-home --disabled-login zeyple >/dev/null
-echo "Benutzer zeyple wurde angelegt"
+echo "added uer zeyple"
 
-# Ein Verzeichnis unter /etc fuer Konfigurationsdatei und die Schluesselverwaltung einrichten
-mkdir -p /etc/zeyple/keys && chmod 700 /etc/zeyple/keys && chown zeyple: /etc/zeyple/keys
-echo "Verzeichnisse wurden angelegt"
+# create the configuration directory and set corret permissions
+mkdir -p /etc/zeyple/keys
+chmod 700 /etc/zeyple/keys
+chown zeyple: /etc/zeyple/keys
+echo "directories got created"
 
-# Das Python-Skript zeyple.py herunterladen
-# keine pruefung ob datei schon existiert, da wir die datei regelmaesig updaten wollen
+# Now we download zeyple itself and the config file and overwrite older local versions
 #if [ ! -e /usr/local/bin/zeyple.py ]; then
-	wget --quiet --output-document=/usr/local/bin/zeyple.py https://raw.github.com/infertux/zeyple/master/zeyple/zeyple.py;
-	chmod 744 /usr/local/bin/zeyple.py && chown zeyple: /usr/local/bin/zeyple.py;
+	wget --quiet --output-document=/usr/local/bin/zeyple.py https://raw.github.com/infertux/zeyple/master/zeyple/zeyple.py
+	chmod 744 /usr/local/bin/zeyple.py && chown zeyple: /usr/local/bin/zeyple.py
 #fi
-# Konfigurationsdatei herunterladen und Rechte setzen
 if [ ! -e /etc/zeyple/zeyple.conf ]; then
 	wget --quiet --output-document=/etc/zeyple/zeyple.conf https://raw.github.com/infertux/zeyple/master/zeyple/zeyple.conf.example;
-	echo "Binary und Konfigurationsdatei wurden installiert";
 fi
-
-# Den oeffentlichen Schluessel fuer EXT_ADDRESS vom Keyserver holen und mit gpg importieren
+echo "downloaded zeyple binary"
+# getting the public key that we need for crypting
 sudo -u zeyple gpg --homedir /etc/zeyple/keys --keyserver $KEYSERVER_ADDRESS --search $EXT_ADDRESS
 
-# Logdatei anlegen und Benutzerrechte setzen
+# creating logfile and logrotate config
 if [ ! -e /var/log/zeyple.log ]; then
 	touch /var/log/zeyple.log && chown zeyple: /var/log/zeyple.log
 fi
@@ -63,11 +62,12 @@ END
 fi
 
 # Postfix fuer zeyple vorbereiten: master.cf und main.cf um die Filtereintraege rweitern
-if ! grep --quiet zeyple /etc/postfix/master.cf; then
+if ! grep --quiet "^zeyple" /etc/postfix/master.cf; then
 cat >> /etc/postfix/master.cf <<END
-zeyple  unix  -  n  n  -  -  pipe
-  user=zeyple argv=/usr/local/bin/zeyple.py
-localhost:10026  inet  n  -  n  -  10  smtpd
+zeyple    unix  -       n       n       -       -       pipe
+  user=zeyple argv=/usr/local/bin/zeyple.py \${recipient}
+
+localhost:10026 inet  n       -       n       -       10      smtpd
   -o content_filter=
   -o receive_override_options=no_unknown_recipient_checks,no_header_body_checks,no_milters
   -o smtpd_helo_restrictions=
@@ -77,30 +77,29 @@ localhost:10026  inet  n  -  n  -  10  smtpd
   -o mynetworks=127.0.0.0/8
   -o smtpd_authorized_xforward_hosts=127.0.0.0/8
 END
-echo "/etc/postfix/master.cf wurde angepasst"
+echo "modified /etc/postfix/master.cf"
 fi
 
-# Damit Zeyple die Schluessel richtig zuordnet, empfiehlt es sich, die interne Mail-Adresse fuer eingehende Mails auf die externe umzuleiten
+# map the INT_ADDRESS to the EXT_ADDRESS
 if ! grep --quiet "^$INT_ADDRESS\ $EXT_ADDRESS" /etc/postfix/recipient_canonical; then
 	echo "$INT_ADDRESS $EXT_ADDRESS" >> /etc/postfix/recipient_canonical
-	# Die Postfix-Empfaengerdatenbank neu erstellen
 	postmap /etc/postfix/recipient_canonical
 fi
 
 
-# Datenbank in der Postfix-Adressenumschreibung bekannt machen und den Contentfilter eintragen
+# tell postfix to use our mapping and zeyple
 if ! grep --quiet zeyple /etc/postfix/main.cf; then
 	echo "recipient_canonical_maps = hash:/etc/postfix/recipient_canonical" >> /etc/postfix/main.cf
 	echo "content_filter = zeyple" >> /etc/postfix/main.cf
-	echo "/etc/postfix/main.cf wurde angepasst"
+	echo "modifed /etc/postfix/main.cf"
 fi
 
-# Postfix-Konfiguration neu laden
 /etc/init.d/postfix reload 1>/dev/null
 echo "postfix wurde reloaded"
 
 if [ $(pgrep -f /usr/lib/postfix/master) ]; then 
-	echo "alles war erfolgreich"
+	echo "we are done and postfix is running"
 else
-	echo "postfix laeuft nicht, ich hab was kaputt gemacht. Bitte fix das schnell weil du grad keine mails verschicken kannst"
+	echo "postfix failed after the reload, please view mail.log:"
+	tail /var/log/mail.log
 fi
