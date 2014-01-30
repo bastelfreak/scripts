@@ -232,4 +232,22 @@ if [ ! -z "${REMOTE}" ]; then
 	rsync --itemize-changes --archive --stats "${DIR}/" -e 'ssh -i /root/.ssh/id_rsa' "root@${REMOTE}:${NEWHOME}/${DOMAIN}/htdocs"
 	# set the permissions again
 	ssh "${REMOTE}" "chown --recursive ${DOMAIN}:${DOMAIN} ${NEWHOME}/${DOMAIN}"
+else
+	echo "what we do now: "
+	echo "triggering create_user()"
+	echo "triggering add_apache_vhost()"
+	echo "triggering create_directories()"
+	echo "setting the right permissions"
+	if [ -z "${DOMAIN}" ]; then
+		echo "you also have to provide the domain for the new vhost (-d)"
+		exit 1
+	fi
+	if [ -z "${NEWHOME}" ]; then
+		echo "you have to provide the new root path for the website (-n)"
+		exit 1
+	fi
+	/bin/bash /root/scripts/setup_domain.sh -a "${DOMAIN} ${NEWHOME}"
+	/bin/bash /root/scripts/setup_domain.sh -c "${DOMAIN} ${NEWHOME}"
+	/bin/bash /root/scripts/setup_domain.sh -s "${DOMAIN} ${NEWHOME}"
+	chown --recursive ${DOMAIN}:${DOMAIN} ${NEWHOME}/${DOMAIN}
 fi
