@@ -4,8 +4,8 @@ sleep 5
 emerge --sync --quiet
 echo "running emerge --update -nd world"
 sleep 5
-emerge --update --ask --quiet -nd world
-emerge --update --newuse --ask --quiet --deep --with-bdeps=y @world
+emerge --update --ask --quiet-build -nd world
+emerge --update --newuse --ask --quiet-build --deep --with-bdeps=y @world
 echo "running emerge --depclean"
 sleep 5
 emerge --ask --verbose --depclean
