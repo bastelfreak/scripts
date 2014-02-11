@@ -108,7 +108,6 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 	ErrorLog ${root_path}/${domain}/logs/error.apache.log
   LogLevel info
   CustomLog ${root_path}/${domain}/logs/access.log combined
-  CustomLog /home/files.bastelfreak.de/logs/access.log combined
 	# Set handlers for PHP files.
 	# application/x-httpd-php                        phtml pht php
 	# application/x-httpd-php3                       php3
@@ -182,9 +181,9 @@ while getopts ":h:r:o:d:n:w:a:s:c:" opt; do
 		n ) NEWHOME="${OPTARG}";;
 		w ) WEBSERVER="${OPTARG}";; # thats currently not supported, you have to use apache
 		# define function calls
-		a ) [ -z "${REMOTE}" ] && create_user "${OPTARG}" || exit 1;;
-		s ) [ -z "${REMOTE}" ] && add_apache_vhost "${OPTARG}" || exit 1;;
-		c ) [ -z "${REMOTE}" ] && create_directories "${OPTARG}" || exit 1;;
+		a ) [ -z "${REMOTE}" ] && create_user "${OPTARG}" || exit 0;;
+		s ) [ -z "${REMOTE}" ] && add_apache_vhost "${OPTARG}" || exit 0;;
+		c ) [ -z "${REMOTE}" ] && create_directories "${OPTARG}" || exit 0;;
 		: ) echo "something is wrong with the parameters"; exit 1;;
 	esac
 done
