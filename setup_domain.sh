@@ -108,11 +108,6 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 	ErrorLog ${root_path}/${domain}/logs/error.apache.log
   LogLevel info
   CustomLog ${root_path}/${domain}/logs/access.log combined
-	# Set handlers for PHP files.
-	# application/x-httpd-php                        phtml pht php
-	# application/x-httpd-php3                       php3
-	# application/x-httpd-php4                       php4
-	# application/x-httpd-php5                       php
 	<FilesMatch ".+\.ph(p[345]?|t|tml)$">
 		SetHandler application/x-httpd-php
 	</FilesMatch>
@@ -245,8 +240,11 @@ else
 		echo "you have to provide the new root path for the website (-n)"
 		exit 1
 	fi
-	/bin/bash /root/scripts/setup_domain.sh -a "${DOMAIN} ${NEWHOME}"
-	/bin/bash /root/scripts/setup_domain.sh -c "${DOMAIN} ${NEWHOME}"
-	/bin/bash /root/scripts/setup_domain.sh -s "${DOMAIN} ${NEWHOME}"
+	#/bin/bash /root/scripts/setup_domain.sh -a "${DOMAIN} ${NEWHOME}"
+	#/bin/bash /root/scripts/setup_domain.sh -c "${DOMAIN} ${NEWHOME}"
+	#/bin/bash /root/scripts/setup_domain.sh -s "${DOMAIN} ${NEWHOME}"
+	create_user "${DOMAIN} ${NEWHOME}"
+	create_directories "${DOMAIN} ${NEWHOME}"
+	add_apache_vhost "${DOMAIN} ${NEWHOME}"
 	chown --recursive ${DOMAIN}:${DOMAIN} ${NEWHOME}/${DOMAIN}
 fi
