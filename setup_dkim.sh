@@ -71,7 +71,7 @@ for SUBJECT in $(mysql --user="${USER}" --host="${HOST}" --password="${PASS}" "$
 		SUM=$(echo -n "${SUBJECT}" | sha512sum)
 		TXT_RECORD="${SUM:16:32}"
 		echo "${TXT_RECORD} ${DOMAIN}:${KEYNAME}:${KEY_DIR}/${DOMAIN}/${KEYNAME}.private" >> "${KEY_MAP}"
-		echo "${SUBJECT/#@/*}" >> "${SENDER_MAP}"
+		echo "${SUBJECT/#@/*@}" >> "${SENDER_MAP}"
 		echo -e "${green}Done with ${DOMAIN} ${endColor}"
 	fi
 done
