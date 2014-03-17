@@ -87,7 +87,8 @@ service postfix restart 1> /dev/null
 service opendkim restart 1> /dev/null
 echo -e "${green}Processed ${TOTAL} subjects, ${NEW} are new${endColor}"
 if [ $(pgrep -f /usr/lib/postfix/master) ]; then
-	echo -e "${green}Postfix reload was also successfull. Postfix will now sign outgoing mails via opendkim. You have to add the TXT records to your zone file to allow other mailserver to verify your signature${endColor}"
+	echo -e "${green}Postfix reload was also successfull. Postfix will now sign outgoing mails via opendkim.\n
+	You have to add the TXT records to your zone file to allow other mailserver to verify your signature${endColor}"
 else 
 	echo -e "${orange}Postfix reload failed. Please view these logs:${endColor}"
 	tail -n10 /var/log/mail.log
