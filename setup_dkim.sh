@@ -61,14 +61,9 @@ if ! grep --quiet "^non_smtpd_milters" "${POSTFIX}"; then
 fi
 for SUBJECT in $(mysql --user="${USER}" --host="${HOST}" --password="${PASS}" "${DB}" --execute "${QUERY}" | awk '{print $1}' | grep -v ^subject$); do
 	(( TOTAL++ ))
-	if [ "${SUBJECT:0:1}" == "@" ]; then
-		STRING=$(grep "^*${SUBJECT} " "${SENDER_MAP}")
-		KEYNAME="default"
-	else
-		STRING=$(grep "^${SUBJECT} " "${SENDER_MAP}")
-		KEYNAME=${SUBJECT%%@*}
-	fi
-	if [ -z "${STRING}" ]; then
+	KEYNAME=${SUBJECT%%@*}
+	: ${KEYNAME:=default}
+	if ! grep -q "^${SUBJECT/#@/*@} " "${SENDER_MAP}"; then
 		(( NEW++ ))
 		DOMAIN=${SUBJECT##*@}
 		mkdir -p "${KEY_DIR}/${DOMAIN}" > /dev/null
@@ -88,7 +83,7 @@ chown opendkim:opendkim /etc/opendkim/keys/* -R
 service postfix restart > /dev/null
 service opendkim restart > /dev/null
 echo -e "${green}Processed ${TOTAL} subjects, ${NEW} are new${endColor}"
-if [ $(pgrep -f /usr/lib/postfix/master) ]; then
+if $(pgrep -f /usr/lib/postfix/master) > /dev/null; then
 	echo -e "${green}Postfix reload was also successfull. Postfix will now sign outgoing mails via opendkim.\n
 	You have to add the TXT records to your zone file to allow other mailserver to verify your signature${endColor}"
 else 
