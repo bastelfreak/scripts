@@ -64,21 +64,21 @@ for SUBJECT in $(mysql --user="${USER}" --host="${HOST}" --password="${PASS}" "$
 		KEYNAME="default"
 	else
 		STRING=$(grep "^${SUBJECT} " "${SENDER_MAP}")
-		KEYNAME=$(echo "${SUBJECT}" | cut -d'@' -f1)
+		KEYNAME=${SUBJECT%%@*}
 	fi
 	if [ -z "${STRING}" ]; then
 		(( NEW++ ))
-		DOMAIN=$(echo "${SUBJECT}" | cut -d'@' -f2)
+		DOMAIN=${SUBJECT##*@}
 		mkdir -p "${KEY_DIR}/${DOMAIN}" > /dev/null
 		opendkim-genkey -S -r -s "${KEYNAME}" -b 2048 -d ${DOMAIN} -D "${KEY_DIR}/${DOMAIN}"
 		SUM=$(echo -n "${SUBJECT}" | sha512sum)
 		TXT_RECORD="${SUM:16:32}"
 		echo "${TXT_RECORD} ${DOMAIN}:${KEYNAME}:${KEY_DIR}/${DOMAIN}/${KEYNAME}.private" >> "${KEY_MAP}"
 		if [ "${SUBJECT:0:1}" == "@" ]; then
-			echo "*${SUBJECT} ${TXT_RECORD}" >> "${SENDER_MAP}"
+			echo "*${SUBJECT} ${TXT_RECORD}"
 		else
-			echo "${SUBJECT} ${TXT_RECORD}" >> "${SENDER_MAP}"
-		fi
+			echo "${SUBJECT} ${TXT_RECORD}"
+		fi >> "${SENDER_MAP}"
 		echo -e "${green}Done with ${DOMAIN} ${endColor}"
 	fi
 done
