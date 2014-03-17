@@ -6,6 +6,7 @@
 # creates keys for every domain and every used email address. 
 # These infos are fetched from a mysql DB
 # schema is based on the mailserver tutorial at workaround.org/ispmail/squeeze
+# this is also working with Wheezy
 # some more infos are available at my blog https://blog.bastelfreak.de/?p=721
 ##
 
