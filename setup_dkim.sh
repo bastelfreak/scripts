@@ -28,9 +28,9 @@ NEW=0
 green="\e[0;32m"
 orange="\e[0;33m"
 endColor="\e[0m"
-if ! which opendkim > /dev/null; then
-	aptitude install -y opendkim opendkim-tools mysql-client > /dev/null
-fi
+if ! which opendkim; then
+	aptitude install -y opendkim opendkim-tools mysql-client
+fi > /dev/null
 mkdir "${CONF_DIR}" 2> /dev/null
 if [ ! -e "${SENDER_MAP}" ]; then
 	touch "${SENDER_MAP}"
