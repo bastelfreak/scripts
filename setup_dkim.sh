@@ -28,7 +28,9 @@ NEW=0
 green="\e[0;32m"
 orange="\e[0;33m"
 endColor="\e[0m"
-aptitude install -y opendkim opendkim-tools mysql-client 1> /dev/null
+if ! which opendkim > /dev/null; then
+	aptitude install -y opendkim opendkim-tools mysql-client 1> /dev/null
+fi
 mkdir "${CONF_DIR}" 2> /dev/null
 if [ ! -e "${SENDER_MAP}" ]; then
 	touch "${SENDER_MAP}"
@@ -83,8 +85,8 @@ for SUBJECT in $(mysql --user="${USER}" --host="${HOST}" --password="${PASS}" "$
 	fi
 done
 chown opendkim:opendkim /etc/opendkim/keys/* -R
-service postfix restart 1> /dev/null
-service opendkim restart 1> /dev/null
+service postfix restart > /dev/null
+service opendkim restart > /dev/null
 echo -e "${green}Processed ${TOTAL} subjects, ${NEW} are new${endColor}"
 if [ $(pgrep -f /usr/lib/postfix/master) ]; then
 	echo -e "${green}Postfix reload was also successfull. Postfix will now sign outgoing mails via opendkim.\n
