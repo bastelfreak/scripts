@@ -71,11 +71,7 @@ for SUBJECT in $(mysql --user="${USER}" --host="${HOST}" --password="${PASS}" "$
 		SUM=$(echo -n "${SUBJECT}" | sha512sum)
 		TXT_RECORD="${SUM:16:32}"
 		echo "${TXT_RECORD} ${DOMAIN}:${KEYNAME}:${KEY_DIR}/${DOMAIN}/${KEYNAME}.private" >> "${KEY_MAP}"
-		if [ "${SUBJECT:0:1}" == "@" ]; then
-			echo "*${SUBJECT} ${TXT_RECORD}"
-		else
-			echo "${SUBJECT} ${TXT_RECORD}"
-		fi >> "${SENDER_MAP}"
+		echo "${SUBJECT/#@/*}" >> "${SENDER_MAP}"
 		echo -e "${green}Done with ${DOMAIN} ${endColor}"
 	fi
 done
@@ -83,7 +79,7 @@ chown opendkim:opendkim /etc/opendkim/keys/* -R
 service postfix restart > /dev/null
 service opendkim restart > /dev/null
 echo -e "${green}Processed ${TOTAL} subjects, ${NEW} are new${endColor}"
-if $(pgrep -f /usr/lib/postfix/master) > /dev/null; then
+if pgrep -f /usr/lib/postfix/master > /dev/null; then
 	echo -e "${green}Postfix reload was also successfull. Postfix will now sign outgoing mails via opendkim.\n
 	You have to add the TXT records to your zone file to allow other mailserver to verify your signature${endColor}"
 else 
