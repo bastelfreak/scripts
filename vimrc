@@ -7,3 +7,4 @@ set backupdir=/tmp
 set backupskip=/tmp/* 
 set directory=/tmp 
 set writebackup
+set autoindent
