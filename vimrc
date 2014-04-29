@@ -2,3 +2,8 @@ syntax on
 set tabstop=2
 set shiftwidth=2
 set number
+set backup 
+set backupdir=/tmp 
+set backupskip=/tmp/* 
+set directory=/tmp 
+set writebackup
