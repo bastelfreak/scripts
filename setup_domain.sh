@@ -101,8 +101,7 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
   ServerAdmin admin@${domain}
 	<Directory ${root_path}/${domain}/htdocs>
 		Options -Indexes
-    Order allow,deny
-    allow from all
+		Require all granted
     AllowOverride All
 	</Directory>
 	ErrorLog ${root_path}/${domain}/logs/error.apache.log
@@ -116,11 +115,9 @@ cat >> "/etc/apache2/sites-available/${domain}" <<END
 	Alias /fcgi-bin/php5-fpm /fpm-${domain}
 	<Location /fcgi-bin/php5-fpm>
 		# here we prevent direct access to this Location url,
-		# env=REDIRECT_STATUS will let us use this fcgi-bin url
+		# env REDIRECT_STATUS will let us use this fcgi-bin url
 		# only after an internal redirect (by Action upper)
-		Order Deny,Allow
-		Deny from All
-		Allow from env=REDIRECT_STATUS
+		Require env REDIRECT_STATUS
 	</Location>
 	<IfModule mod_fastcgi.c>
 		# throws error, so disabled:
