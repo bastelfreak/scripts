@@ -1,0 +1,9 @@
+[Unit]
+Description=Set stripe cache to 8192
+ 
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash -c "echo 8192 > /sys/block/md5/md/stripe_cache_size"
+
+[Install]
+WantedBy=multi-user.target
