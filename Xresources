@@ -1,0 +1,77 @@
+xvt.saveLines: 100000
+URxvt.scrollBar: false
+URxvt.foreground: Grey
+URxvt.background: Black
+URxvt.secondaryScroll: false
+URxvt*font: xft:DejaVu Sans Mono:pixelsize=12
+URxvt.perl-ext-common: default,matcher, tabbed
+URxvt.url-launcher: /usr/bin/chromium
+URxvt.matcher.button: 1
+URxvt.tabbed.saveLines: 1000
+URxvt.tabbed.scrollBar: false
+URxvt.tabbed.tabbar-fg: 0
+URxvt.tabbed.tabbar-bg: 1
+URxvt.tabbed.tab-fg: 1
+URxvt.tabbed.tab-bg: 0
+URxvt.tabbed.secondaryScroll: false
+URxvt.tabbed.font: xft:DejaVu Sans Mono:pixelsize=12
+URxvt.letterSpace: 1
+URxvt*inheritPixmap: true 
+URxvt*termName: rxvt-256color
+URxvt*internalBorder: 2
+URxvt*shading: 0
+
+URxvt.keysym.C-M-+:     perl:font-size:increase
+URxvt.keysym.C-M--:   perl:font-size:decrease
+URxvt.keysym.C-S-Up:   perl:font-size:incglobal
+URxvt.keysym.C-S-Down: perl:font-size:decglobal
+
+URxvt.iso14755: false
+URxvt.iso14755_52: false
+
+xterm*Background:               black
+xterm*Foreground:               grey
+xterm*dynamicColors:      true
+xterm*utf8:               2
+!XTerm*faceName: terminus:pixelsize=12
+XTerm*faceName: DejaVu Sans Mono
+XTerm*faceSize: 9
+
+! Xft settings ---------------------------------------------------------------
+
+Xft.dpi:        96
+Xft.antialias:  true
+Xft.rgba:       rgb
+Xft.hinting:    true
+Xft.hintstyle:  hintslight
+
+! terminal colors ------------------------------------------------------------
+
+! tangoesque scheme
+*background: #111111
+*foreground: #babdb6
+! Black (not tango) + DarkGrey
+*color0:  #000000
+*color8:  #555753
+! DarkRed + Red
+*color1:  #ff6565
+*color9:  #ff8d8d
+! DarkGreen + Green
+*color2:  #93d44f
+*color10: #c8e7a8
+! DarkYellow + Yellow
+*color3:  #eab93d
+*color11: #ffc123
+! DarkBlue + Blue
+*color4:  #204a87
+*color12: #3465a4
+! DarkMagenta + Magenta
+*color5:  #ce5c00
+*color13: #f57900
+!DarkCyan + Cyan (both not tango)
+*color6:  #89b6e2
+*color14: #46a4ff
+! LightGrey + White
+*color7:  #cccccc
+*color15: #ffffff
+

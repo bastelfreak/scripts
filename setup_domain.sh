@@ -93,8 +93,8 @@ add_apache_vhost() {
 	local domain=${1%% *}
 	local root_path=${1#* }
 	let port++
-	if [ ! -f "/etc/apache2/sites-available/${domain}" ]; then
-cat >> "/etc/apache2/sites-available/${domain}" <<END
+	if [ ! -f "/etc/apache2/sites-available/${domain}.conf" ]; then
+cat >> "/etc/apache2/sites-available/${domain}.conf" <<END
 <VirtualHost *:80>
 	DocumentRoot ${root_path}/${domain}/htdocs
 	ServerName ${domain}
