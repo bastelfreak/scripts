@@ -1,0 +1,8 @@
+[Unit]
+Description=Puppet master served by Puma
+
+[Service]
+ExecStart=/usr/local/bin/puma -C /etc/puma/config.rb
+
+[Install]
+WantedBy=multi-user.target
