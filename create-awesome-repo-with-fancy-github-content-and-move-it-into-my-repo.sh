@@ -75,3 +75,8 @@ hui() {
   git remote -v
 #  add_upstream "${1}"
 }
+
+# $1 should be the name of a 
+search_forge() {
+
+}
