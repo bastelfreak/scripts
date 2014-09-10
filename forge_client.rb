@@ -14,6 +14,11 @@
 # http://net-ssh.github.io/net-ssh/
 ##
 
+
+##
+# todo: push upstream
+##
+
 require 'puppet_forge'
 require 'git'
 require 'net/ssh'
@@ -21,14 +26,17 @@ require 'net/ssh'
 PuppetForge.user_agent = 'bastelfreak was here'
 testmodule = 'kickstack'
 path = '/home/bastelfreak/HE-puppet-admin-git'
+mngt_repo = 'gitolite-admin'
+mngt_repo_path = "#{path}/#{mngt_repo}"
 sshalias = 'gitolite-admin-node'
 host = 'master.puppet.local'
 user = 'git'
 key = '/home/bastelfreak/.ssh/id_rsa_git_admin'
 
 # this function will do a git checkout
-def clone(res)
+def clone_and_move(res)
   g = Git.clone res.homepage_url, res.name, :path => path
+  g.remote('origin').remove
 end
 
 # checks if our gitolite already serves a suitable repo
@@ -36,11 +44,16 @@ end
 def add_repo()
   repos = get_current_repos
   unless repos.include? res.name
-    f = File.new "#{path}/gitolite-admin/conf/gitolite.conf", 'w+'
+    mngt_g = Git.open mngt_repo_path
+    repos = get_current_repos
+    f = File.new "#{mngt_repo_path}/conf/gitolite.conf", 'w+'
     f.write "repo #{res.name}\n"
     f.write "\t RW+ = @all\n"
     f.close
+    mngt_g.commit_all "added repo #{res.name}"
+    mngt_g.push
   end
+
 end
 
 # connects via ssh to our gitolite service and parses the output
