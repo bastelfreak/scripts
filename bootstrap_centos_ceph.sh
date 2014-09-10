@@ -1,5 +1,8 @@
 #!/bin/bash
 
+##
+# created bei Thore Boedecker
+##
 # change centos repo baseurl to local ftp mirror
 cat <<'EOF' >/etc/yum.repos.d/CentOS-Base.repo
 [base]
