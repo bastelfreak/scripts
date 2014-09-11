@@ -12,19 +12,23 @@
 # https://forgeapi.puppetlabs.com/
 # https://github.com/schacon/ruby-git
 # http://net-ssh.github.io/net-ssh/
+# https://github.com/schacon/ruby-git/pull/163
 ##
 
 
 ##
-# todo: push upstream
+# todo: 
+# implement push upstream - done
+# implement logic
 ##
 
 require 'puppet_forge'
 require 'git'
 require 'net/ssh'
+require 'yaml'
 
 PuppetForge.user_agent = 'bastelfreak was here'
-testmodule = 'kickstack'
+testmodule = 'lvm'
 path = '/home/bastelfreak/HE-puppet-admin-git'
 mngt_repo = 'gitolite-admin'
 mngt_repo_path = "#{path}/#{mngt_repo}"
@@ -37,6 +41,8 @@ key = '/home/bastelfreak/.ssh/id_rsa_git_admin'
 def clone_and_move(res)
   g = Git.clone res.homepage_url, res.name, :path => path
   g.remote('origin').remove
+  g.add_remote 'origin', "#{sshalias}:#{res.name}"
+  g.push 'origin', 'master', :set_upstream => true
 end
 
 # checks if our gitolite already serves a suitable repo
@@ -45,10 +51,9 @@ def add_repo()
   repos = get_current_repos
   unless repos.include? res.name
     mngt_g = Git.open mngt_repo_path
-    repos = get_current_repos
-    f = File.new "#{mngt_repo_path}/conf/gitolite.conf", 'w+'
+    f = File.open "#{mngt_repo_path}/conf/gitolite.conf", 'a'
     f.write "repo #{res.name}\n"
-    f.write "\t RW+ = @all\n"
+    f.write "\tRW+ = @all\n"
     f.close
     mngt_g.commit_all "added repo #{res.name}"
     mngt_g.push
@@ -82,8 +87,9 @@ def get_current_repos()
 end
 
 # wrapper function
-def voodoo(res)  
-  clone
+def voodoo
+  add_repo
+  clone_and_move
 end
 
 result = PuppetForge::Module.where(query: testmodule).all
@@ -92,4 +98,24 @@ if result.total == 1
   voodoo res
 else
   puts result.inspect
+end
+
+# possible module names:
+# blaa # if we find only one suitable module, we take it, otherwise inspect
+# creator-blaa # directly take it
+# creator/blaa # mhm
+def parse_var
+  testmodule = ARGV[0]
+  if testmodule.include? "-" || testmodule.include? "/"
+    testmodule.gsub! '/' '-'
+    res = PuppetForge::Module.find(testmodule)
+  else
+    result = PuppetForge::Module.where(query: testmodule).all
+    if result.total == 1
+      res = result.first
+    else
+      puts "oh nooooooes"
+      puts result.to_yaml
+    end
+  end
 end
