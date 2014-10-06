@@ -14,6 +14,15 @@
 # http://net-ssh.github.io/net-ssh/
 # https://github.com/schacon/ruby-git/pull/163
 ##
+# How does it work?
+# start the script with ./script modulename
+# the parse_var method starts to analyse the given modulename,
+# if we think we got a uniq modulename we will search it on forge.puppetlabs.com
+# if it's a general name we will do a generic search and take the first hit
+# 
+# our voodo method will add a new repo to our gitolite service (add_repo), then the module
+# gets checked out and moved into our own repo. we are doing this recursivly for every module that is a dependencie
+##
 
 
 ##
@@ -107,7 +116,7 @@ class PuppetWrapper
     clone_and_move res if add_repo res
     deps = get_requirements res
     deps.each do |dep|
-      vodoo dep
+      voodoo dep
     end
   end
 
@@ -136,5 +145,5 @@ class PuppetWrapper
 end
 
 # let the magic happen
-#magic = PuppetWrapper.new
-#magic.parse_var ARGV[0]
+magic = PuppetWrapper.new
+magic.parse_var ARGV[0]
