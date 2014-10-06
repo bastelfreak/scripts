@@ -93,9 +93,11 @@ class PuppetWrapper
     Net::SSH.start(@sshalias, @user) do |ssh|
       output = ssh.exec!('info')
     end
-    output = output.lines.to_a[2..-1].join
-    output.each_line do |line|
-      ary << line[/.*\t(.*)$/, 1]
+    unless output.empty?
+      output = output.lines.to_a[2..-1].join
+      output.each_line do |line|
+        ary << line[/.*\t(.*)$/, 1]
+      end
     end
   end
 
@@ -113,24 +115,26 @@ class PuppetWrapper
   # blaa # if we find only one suitable module, we take it, otherwise inspect
   # creator-blaa # directly take it
   # creator/blaa # mhm
-  def parse_var
-    testmodule = ARGV[0]
-    if testmodule.include? "-" || testmodule.include? "/"
-      testmodule.gsub! '/' '-'
-      res = PuppetForge::Module.find(testmodule)
-      voodoo res
-    else
-      result = PuppetForge::Module.where(query: testmodule).all
-      if result.total == 1
-        res = result.first
+  def parse_var(var)
+    unless var.empty?
+      if var.include?("-") || var.include?("/")
+        var.gsub! '/' '-'
+        res = PuppetForge::Module.find(var)
         voodoo res
       else
-        puts "oh nooooooes"
-        puts result.to_yaml
+        result = PuppetForge::Module.where(query: var).all
+        if result.total == 1
+          res = result.first
+          voodoo res
+        else
+          puts "oh nooooooes"
+          puts result.to_yaml
+        end
       end
     end
   end
 end
 
 # let the magic happen
-Puppetwrapper.parse_var
+#magic = PuppetWrapper.new
+#magic.parse_var ARGV[0]
