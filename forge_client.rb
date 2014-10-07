@@ -30,7 +30,7 @@
 #     add_repo - res.name doesn't work?
 #     clone_and_move - not tested
 #     parse_var - not completely tested
-#     voodoo - well, should work, but not tested
+#     recursively_mirror_repos - well, should work, but not tested
 # seems to work:
 #   initialize
 #   connect_to_git
@@ -43,7 +43,7 @@ require 'git'
 require 'net/ssh'
 require 'yaml'
 
-class PuppetWrapper
+module PuppetWrapper
 
   def initialize
     PuppetForge.user_agent = 'bastelfreak was here'
@@ -57,17 +57,22 @@ class PuppetWrapper
 
   # this method will do a git checkout
   def clone_and_move(res)
+    puts "we are know cloning #{res.name} from #{res.homepage_url} to #{@path}"
     g = Git.clone res.homepage_url, res.name, :path => @path
     g.remote('origin').remove
     g.add_remote 'origin', "#{@sshalias}:#{res.name}"
     g.push 'origin', 'master', :set_upstream => true
+    puts "and we removed the old remote, added our own repo as origin and set it as upstream"
   end
 
   # checks if our gitolite already serves a suitable repo
   # otherwise create one
   def add_repo(res)
     repos = get_current_repos(connect_to_git('info'))
-    unless repos.include? res.name
+    p res
+    name = res.name
+    unless repos.include?(name)
+      puts "we don't own a repo called #{res.name}, we will add it"
       mngt_g = Git.open @mngt_repo_path
       f = File.open "#{@mngt_repo_path}/conf/gitolite.conf", 'a'
       f.write "repo #{res.name}\n"
@@ -75,6 +80,7 @@ class PuppetWrapper
       f.close
       mngt_g.commit_all "added repo #{res.name}"
       mngt_g.push
+      puts "aaaaaand its added"
     end
   end
 
@@ -82,7 +88,7 @@ class PuppetWrapper
   def get_requirements(res)
     release = res.releases.first
     deps = release.metadata['dependencies']
-    #=> [{"name"=>"puppetlabs/stdlib", "version_requirement"=>"4.1.x"}]
+    #{"name"=>"puppetlabs/stdlib", "version_requirement"=>"4.1.x"}
 
   end
 
@@ -119,13 +125,31 @@ def get_current_repos(output)
   end 
 end
 
-  # wrapper function
-  def voodoo(res)
+# connect to forge.puppetlabs.com API to get information about a specific module
+def get_puppetforge_module(modulename)
+  PuppetForge::Module.find(modulename)
+end
+
+# search through forge.puppetlabs.com and returns all matching modules
+def get_puppetforge_modules(modulename)
+  PuppetForge::Module.where(query: modulename).all
+end
+
+  # wrapper function for recursion
+  # clones a module into our own repo and every dependencies
+  # todo:
+  # handle dependencies based on module versions
+  def recursively_mirror_repos(res)
     # for main repo + each repo in $dependencies do
-    clone_and_move res if add_repo res
+    if add_repo res
+      clone_and_move res
+    else
+      puts "we already own a repo named #{res.name}, won't clone it, but we are checking for deps"
+    end
     deps = get_requirements res
     deps.each do |dep|
-      voodoo dep
+      puts "#{res.name} has the dependency #{dep}, we will continue with that"
+      recursively_mirror_repos(get_puppetforge_object(dep['name']))
     end
   end
 
@@ -137,14 +161,17 @@ end
     unless var.empty?
       if var.include?("-") || var.include?("/")
         var.gsub! '/' '-'
-        res = PuppetForge::Module.find(var)
-        voodoo res
+        res = get_puppetforge_object var
+        puts "congratz, we found one module names #{res.name}, we will start to mirror it"
+        recursively_mirror_repos res
       else
-        result = PuppetForge::Module.where(query: var).all
+        result = get_puppetforge_modules var
         if result.total == 1
           res = result.first
-          voodoo res
+          recursively_mirror_repos res
         else
+          # todo:
+          # we found more than one suitable module, print all and exit would be nice
           puts "oh nooooooes"
           puts result.to_yaml
         end
@@ -154,5 +181,4 @@ end
 end
 
 # let the magic happen
-#magic = PuppetWrapper.new
-#magic.parse_var ARGV[0].dup
+PuppetWrapper.parse_var ARGV[0].dup
