@@ -16,26 +16,16 @@
 ##
 # How does it work?
 # start the script with ./script modulename
-# the parse_var method starts to analyse the given modulename,
+# the setup method starts to analyse the given modulename,
 # if we think we got a uniq modulename we will search it on forge.puppetlabs.com
-# if it's a general name we will do a generic search and take the first hit
+# if it's a general name we will do a generic search and take the first hit if we just get one result
 # 
-# our voodo method will add a new repo to our gitolite service (add_repo), then the module
-# gets checked out and moved into our own repo. we are doing this recursivly for every module that is a dependencie
+# our recursively_mirror_repos method will add a new repo to our gitolite service (add_repo), then the module
+# gets checked out and moved into our own repo. we are doing this recursivly for every module that is a dependency
 ##
 
 ##
-# todo: 
-#   testing
-#     add_repo - res.name doesn't work?
-#     clone_and_move - not tested
-#     parse_var - not completely tested
-#     recursively_mirror_repos - well, should work, but not tested
-# seems to work:
-#   initialize
-#   connect_to_git
-#   get_current_repos
-#   parse_var (tested only with valid module names)
+# Well, this script finally works, look at the code for 'todo' for further improvements
 ##
 
 require 'puppet_forge'
@@ -43,20 +33,17 @@ require 'git'
 require 'net/ssh'
 require 'yaml'
 
-module PuppetWrapper
+module ForgeClient
 
-  def initialize
-    PuppetForge.user_agent = 'bastelfreak was here'
-    @testmodule = 'lvm'
-    @path = '/home/bastelfreak/HE-puppet-admin-git'
-    @mngt_repo = 'gitolite-admin'
-    @mngt_repo_path = "#{@path}/#{@mngt_repo}"
-    @sshalias = 'gitolite-admin-node'
-    @user = 'git'
-  end
+  PuppetForge.user_agent = 'Mozilla/5.0 (Windows NT 5.1; rv:5.0.1) Gecko/20100101 Firefox/5.0.1'
+  @path = '/home/bastelfreak/HE-puppet-admin-git'
+  @mngt_repo = 'gitolite-admin'
+  @mngt_repo_path = "#{@path}/#{@mngt_repo}"
+  @sshalias = 'gitolite-admin-node' # this is a alias in ~/.ssh/config
+  @user = 'git'
 
   # this method will do a git checkout
-  def clone_and_move(res)
+  def self.clone_and_move(res)
     puts "we are know cloning #{res.name} from #{res.homepage_url} to #{@path}"
     g = Git.clone res.homepage_url, res.name, :path => @path
     g.remote('origin').remove
@@ -67,11 +54,9 @@ module PuppetWrapper
 
   # checks if our gitolite already serves a suitable repo
   # otherwise create one
-  def add_repo(res)
+  def self.add_repo(res)
     repos = get_current_repos(connect_to_git('info'))
-    p res
-    name = res.name
-    unless repos.include?(name)
+    unless repos.include?(res.name)
       puts "we don't own a repo called #{res.name}, we will add it"
       mngt_g = Git.open @mngt_repo_path
       f = File.open "#{@mngt_repo_path}/conf/gitolite.conf", 'a'
@@ -85,7 +70,8 @@ module PuppetWrapper
   end
 
   # return a pretty list of all requiered modules
-  def get_requirements(res)
+  def self.get_requirements(res)
+    puts "lets get all the requirements for #{res.name}"
     release = res.releases.first
     deps = release.metadata['dependencies']
     #{"name"=>"puppetlabs/stdlib", "version_requirement"=>"4.1.x"}
@@ -106,8 +92,7 @@ module PuppetWrapper
   # R W  puppetlabs-stdlib
   # R W  r10k-management
   # R W  testing
-  def connect_to_git(cmd)
-    ary = []
+  def self.connect_to_git(cmd)
     #Net::SSH needs the user, even if it is already specified in our sshalias, bug?
     Net::SSH.start(@sshalias, @user) do |ssh|
       ssh.exec!(cmd)
@@ -115,7 +100,7 @@ module PuppetWrapper
   end
 
 # gets every repo from our get_current_repos()
-def get_current_repos(output)
+def self.get_current_repos(output)
   unless output.empty?
     ary = []
     output = output.lines.to_a[2..-1].join
@@ -126,12 +111,16 @@ def get_current_repos(output)
 end
 
 # connect to forge.puppetlabs.com API to get information about a specific module
-def get_puppetforge_module(modulename)
-  PuppetForge::Module.find(modulename)
+def self.get_puppetforge_module(modulename)
+  puts "connect to forge.puppetlabs.com because we want module #{modulename}"
+  modulename.gsub!('/', '-')
+  puts modulename
+  res = PuppetForge::Module.find(modulename)
 end
 
 # search through forge.puppetlabs.com and returns all matching modules
-def get_puppetforge_modules(modulename)
+def self.get_puppetforge_modules(modulename)
+  puts "connect to forge.puppetlabs.com because we want to search for #{modulename}"
   PuppetForge::Module.where(query: modulename).all
 end
 
@@ -139,7 +128,7 @@ end
   # clones a module into our own repo and every dependencies
   # todo:
   # handle dependencies based on module versions
-  def recursively_mirror_repos(res)
+  def self.recursively_mirror_repos(res)
     # for main repo + each repo in $dependencies do
     if add_repo res
       clone_and_move res
@@ -149,7 +138,7 @@ end
     deps = get_requirements res
     deps.each do |dep|
       puts "#{res.name} has the dependency #{dep}, we will continue with that"
-      recursively_mirror_repos(get_puppetforge_object(dep['name']))
+      recursively_mirror_repos(get_puppetforge_module(dep['name']))
     end
   end
 
@@ -157,12 +146,11 @@ end
   # blaa # if we find only one suitable module, we take it, otherwise inspect
   # creator-blaa # directly take it
   # creator/blaa # mhm
-  def parse_var(var)
+  def self.setup(var)
     unless var.empty?
       if var.include?("-") || var.include?("/")
-        var.gsub! '/' '-'
-        res = get_puppetforge_object var
-        puts "congratz, we found one module names #{res.name}, we will start to mirror it"
+        res = get_puppetforge_module var
+        puts "congratz, we found one module named #{res.name}, we will start to mirror it"
         recursively_mirror_repos res
       else
         result = get_puppetforge_modules var
@@ -181,4 +169,5 @@ end
 end
 
 # let the magic happen
-PuppetWrapper.parse_var ARGV[0].dup
+require_relative 'forge_client.rb'
+ForgeClient.setup ARGV[0].dup
