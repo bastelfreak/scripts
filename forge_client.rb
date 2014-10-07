@@ -24,12 +24,18 @@
 # gets checked out and moved into our own repo. we are doing this recursivly for every module that is a dependencie
 ##
 
-
 ##
 # todo: 
-# implement push upstream - done
-# implement logic - better
-# implement get_requirements - replace / with - and return a hash
+#   testing
+#     add_repo - res.name doesn't work?
+#     clone_and_move - not tested
+#     parse_var - not completely tested
+#     voodoo - well, should work, but not tested
+# seems to work:
+#   initialize
+#   connect_to_git
+#   get_current_repos
+#   parse_var (tested only with valid module names)
 ##
 
 require 'puppet_forge'
@@ -51,7 +57,7 @@ class PuppetWrapper
 
   # this method will do a git checkout
   def clone_and_move(res)
-    g = Git.clone res.homepage_url, res.name, :path => path
+    g = Git.clone res.homepage_url, res.name, :path => @path
     g.remote('origin').remove
     g.add_remote 'origin', "#{@sshalias}:#{res.name}"
     g.push 'origin', 'master', :set_upstream => true
@@ -60,7 +66,7 @@ class PuppetWrapper
   # checks if our gitolite already serves a suitable repo
   # otherwise create one
   def add_repo(res)
-    repos = get_current_repos
+    repos = get_current_repos(connect_to_git('info'))
     unless repos.include? res.name
       mngt_g = Git.open @mngt_repo_path
       f = File.open "#{@mngt_repo_path}/conf/gitolite.conf", 'a'
@@ -69,9 +75,7 @@ class PuppetWrapper
       f.close
       mngt_g.commit_all "added repo #{res.name}"
       mngt_g.push
-      return true
     end
-    return false
   end
 
   # return a pretty list of all requiered modules
@@ -82,7 +86,7 @@ class PuppetWrapper
 
   end
 
-  # connects via ssh to our gitolite service and parses the output
+  # connects via ssh to our gitolite service
   # ssh output:
   #hello bastelfreak, this is git@master running gitolite3 v3.6.1-6-gdc8b590 on git 1.8.3.1
   #
@@ -96,19 +100,24 @@ class PuppetWrapper
   # R W  puppetlabs-stdlib
   # R W  r10k-management
   # R W  testing
-  def get_current_repos()
+  def connect_to_git(cmd)
     ary = []
-    #le wild bug occured. why do we have to specify the user?!
+    #Net::SSH needs the user, even if it is already specified in our sshalias, bug?
     Net::SSH.start(@sshalias, @user) do |ssh|
-      output = ssh.exec!('info')
-    end
-    unless output.empty?
-      output = output.lines.to_a[2..-1].join
-      output.each_line do |line|
-        ary << line[/.*\t(.*)$/, 1]
-      end
+      ssh.exec!(cmd)
     end
   end
+
+# gets every repo from our get_current_repos()
+def get_current_repos(output)
+  unless output.empty?
+    ary = []
+    output = output.lines.to_a[2..-1].join
+    output.each_line do |line|
+      ary << line[/.*\t(.*)$/, 1]
+    end
+  end 
+end
 
   # wrapper function
   def voodoo(res)
@@ -145,5 +154,5 @@ class PuppetWrapper
 end
 
 # let the magic happen
-magic = PuppetWrapper.new
-magic.parse_var ARGV[0]
+#magic = PuppetWrapper.new
+#magic.parse_var ARGV[0].dup
