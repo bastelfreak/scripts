@@ -23,9 +23,10 @@
 # our recursively_mirror_repos method will add a new repo to our gitolite service (add_repo), then the module
 # gets checked out and moved into our own repo. we are doing this recursivly for every module that is a dependency
 ##
-
-##
 # Well, this script finally works, look at the code for 'todo' for further improvements
+##
+# Version is 1.1 (2014-10-08)
+# My Docs: https://blog.bastelfreak.de/?p=990
 ##
 
 require 'puppet_forge'
@@ -70,12 +71,13 @@ module ForgeClient
   end
 
   # return a pretty list of all requiered modules
+  # 'dependencies' is a hash:
+  # {"name"=>"puppetlabs/stdlib", "version_requirement"=>"4.1.x"}
+  # we have to parse the version laster
   def self.get_requirements(res)
     puts "lets get all the requirements for #{res.name}"
     release = res.releases.first
     deps = release.metadata['dependencies']
-    #{"name"=>"puppetlabs/stdlib", "version_requirement"=>"4.1.x"}
-
   end
 
   # connects via ssh to our gitolite service
@@ -93,81 +95,79 @@ module ForgeClient
   # R W  r10k-management
   # R W  testing
   def self.connect_to_git(cmd)
-    #Net::SSH needs the user, even if it is already specified in our sshalias, bug?
     Net::SSH.start(@sshalias, @user) do |ssh|
       ssh.exec!(cmd)
     end
   end
 
-# gets every repo from our get_current_repos()
-def self.get_current_repos(output)
-  unless output.empty?
+  # gets every repo from our gitolite service and return as array
+  def self.get_current_repos(output)
     ary = []
     output = output.lines.to_a[2..-1].join
-    output.each_line do |line|
-      ary << line[/.*\t(.*)$/, 1]
+    output.each_line do |line| ary << line[/.*\t(.*)$/, 1] end
+  end
+
+  # connect to forge.puppetlabs.com API to get information about a specific module
+  def self.get_puppetforge_module(modulename)
+    puts "connect to forge.puppetlabs.com because we want module #{modulename}"
+    PuppetForge::Module.find(modulename)
+  end
+
+  # search through forge.puppetlabs.com and returns all matching modules
+  def self.get_puppetforge_modules(modulename)
+    puts "connect to forge.puppetlabs.com because we want to search for #{modulename}"
+    results = PuppetForge::Module.where(query: modulename).all
+    ary = []
+    results.total > 1 ? results.each do |result| ary << result.name end : results.first
+    p ary
+  end
+
+  # wrapperfunction for searching a module / getting a specific
+  # always returns a hash
+  def self.get_puppetforge(modulename)
+    result = nil
+    if modulename.include?('-') || modulename.include?('/')
+      modulename.gsub!('/', '-')
+      result = get_puppetforge_module modulename
+    elsif result.nil?
+      get_puppetforge_modules modulename
     end
-  end 
-end
-
-# connect to forge.puppetlabs.com API to get information about a specific module
-def self.get_puppetforge_module(modulename)
-  puts "connect to forge.puppetlabs.com because we want module #{modulename}"
-  modulename.gsub!('/', '-')
-  puts modulename
-  res = PuppetForge::Module.find(modulename)
-end
-
-# search through forge.puppetlabs.com and returns all matching modules
-def self.get_puppetforge_modules(modulename)
-  puts "connect to forge.puppetlabs.com because we want to search for #{modulename}"
-  PuppetForge::Module.where(query: modulename).all
-end
+  end
 
   # wrapper function for recursion
   # clones a module into our own repo and every dependencies
   # todo:
   # handle dependencies based on module versions
   def self.recursively_mirror_repos(res)
-    # for main repo + each repo in $dependencies do
     if add_repo res
-      clone_and_move res
+      clone_and_move res 
     else
-      puts "we already own a repo named #{res.name}, won't clone it, but we are checking for deps"
+      puts "we already own a repo named #{res.name}, won't clone it"
     end
     deps = get_requirements res
     deps.each do |dep|
       puts "#{res.name} has the dependency #{dep}, we will continue with that"
-      recursively_mirror_repos(get_puppetforge_module(dep['name']))
+      recursively_mirror_repos(get_puppetforge(dep['name']))
     end
   end
 
-  # possible module names:
-  # blaa # if we find only one suitable module, we take it, otherwise inspect
-  # creator-blaa # directly take it
-  # creator/blaa # mhm
+  # main function that starts the mirroring of a specific module
+  # or prints a list of modules that we could mirror
   def self.setup(var)
-    unless var.empty?
-      if var.include?("-") || var.include?("/")
-        res = get_puppetforge_module var
-        puts "congratz, we found one module named #{res.name}, we will start to mirror it"
-        recursively_mirror_repos res
-      else
-        result = get_puppetforge_modules var
-        if result.total == 1
-          res = result.first
-          recursively_mirror_repos res
-        else
-          # todo:
-          # we found more than one suitable module, print all and exit would be nice
-          puts "oh nooooooes"
-          puts result.to_yaml
-        end
-      end
+    res = get_puppetforge var
+    if res.is_a? Array
+      puts "we found the following modules:"
+      res.each do |modulename| puts modulename end
+      puts "please start the script again and specify one of the above modules"
+    else
+      puts "congratz, we found one module named #{res.name}, we will start to mirror it"
+      recursively_mirror_repos res
     end
-  end
 end
 
 # let the magic happen
-require_relative 'forge_client.rb'
-ForgeClient.setup ARGV[0].dup
+if ARGV[0]
+  ForgeClient.setup ARGV[0].dup 
+else
+  puts "please specify a module as $1 that you would like to mirror"
+end
