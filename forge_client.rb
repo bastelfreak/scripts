@@ -25,7 +25,7 @@
 ##
 # Well, this script finally works, look at the code for 'todo' for further improvements
 ##
-# Version is 1.1 (2014-10-08)
+# Version is 1.1.1 (2014-10-08)
 # My Docs: https://blog.bastelfreak.de/?p=990
 ##
 
@@ -73,7 +73,7 @@ module ForgeClient
   # return a pretty list of all requiered modules
   # 'dependencies' is a hash:
   # {"name"=>"puppetlabs/stdlib", "version_requirement"=>"4.1.x"}
-  # we have to parse the version laster
+  # we have to parse the version later
   def self.get_requirements(res)
     puts "lets get all the requirements for #{res.name}"
     release = res.releases.first
@@ -119,7 +119,6 @@ module ForgeClient
     results = PuppetForge::Module.where(query: modulename).all
     ary = []
     results.total > 1 ? results.each do |result| ary << result.name end : results.first
-    p ary
   end
 
   # wrapperfunction for searching a module / getting a specific
