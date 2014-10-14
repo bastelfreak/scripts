@@ -25,7 +25,7 @@
 ##
 # Well, this script finally works, look at the code for 'todo' for further improvements
 ##
-# Version is 1.1.3 (2014-10-14)
+# Version is 1.2 (2014-10-14)
 # My Docs: https://blog.bastelfreak.de/?p=990
 ##
 
@@ -50,6 +50,7 @@ module ForgeClient
     g.add_remote 'origin', "#{@sshalias}:#{res.name}"
     g.push 'origin', 'master', :set_upstream => true
     puts "and we removed the old remote, added our own repo as origin and set it as upstream"
+    return true
   end
 
   # checks if our gitolite already serves a suitable repo
@@ -104,6 +105,7 @@ module ForgeClient
     ary = []
     output = output.lines.to_a[2..-1].join
     output.each_line do |line| ary << line[/.*\t(.*)$/, 1] end
+    ary
   end
 
   # connect to forge.puppetlabs.com API to get information about a specific module
