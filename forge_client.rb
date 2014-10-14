@@ -25,7 +25,7 @@
 ##
 # Well, this script finally works, look at the code for 'todo' for further improvements
 ##
-# Version is 1.2 (2014-10-14)
+# Version is 1.3 (2014-10-14)
 # My Docs: https://blog.bastelfreak.de/?p=990
 ##
 
@@ -102,10 +102,7 @@ module ForgeClient
 
   # gets every repo from our gitolite service and return as array
   def self.get_current_repos(output)
-    ary = []
-    output = output.lines.to_a[2..-1].join
-    output.each_line do |line| ary << line[/.*\t(.*)$/, 1] end
-    ary
+    output.lines[2..-1].map {|s| s[/.*\t(.*)$/, 1] }
   end
 
   # connect to forge.puppetlabs.com API to get information about a specific module
