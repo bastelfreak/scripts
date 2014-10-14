@@ -25,14 +25,13 @@
 ##
 # Well, this script finally works, look at the code for 'todo' for further improvements
 ##
-# Version is 1.1.1 (2014-10-08)
+# Version is 1.1.2 (2014-10-14)
 # My Docs: https://blog.bastelfreak.de/?p=990
 ##
 
 require 'puppet_forge'
 require 'git'
 require 'net/ssh'
-require 'yaml'
 
 module ForgeClient
 
@@ -40,7 +39,7 @@ module ForgeClient
   @path = '/home/bastelfreak/HE-puppet-admin-git'
   @mngt_repo = 'gitolite-admin'
   @mngt_repo_path = "#{@path}/#{@mngt_repo}"
-  @sshalias = 'gitolite-admin-node' # this is a alias in ~/.ssh/config
+  @sshalias = 'gitolite-admin-node' # this is an alias in ~/.ssh/config
   @user = 'git'
 
   # this method will do a git checkout
