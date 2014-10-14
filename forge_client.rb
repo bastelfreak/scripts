@@ -25,7 +25,7 @@
 ##
 # Well, this script finally works, look at the code for 'todo' for further improvements
 ##
-# Version is 1.1.2 (2014-10-14)
+# Version is 1.1.3 (2014-10-14)
 # My Docs: https://blog.bastelfreak.de/?p=990
 ##
 
@@ -161,6 +161,7 @@ module ForgeClient
       puts "congratz, we found one module named #{res.name}, we will start to mirror it"
       recursively_mirror_repos res
     end
+  end
 end
 
 # let the magic happen
