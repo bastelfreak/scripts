@@ -10,3 +10,4 @@ set backupskip=/tmp/*
 set directory=/tmp 
 set writebackup
 set autoindent
+set hlsearch
