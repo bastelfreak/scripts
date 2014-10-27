@@ -1,0 +1,14 @@
+[Unit]
+Description=gunicorn daemon for puppetboard
+After=network.target
+
+[Service]
+PIDFile=/run/gunicorn/pid
+WorkingDirectory=/usr/lib/python2.7/site-packages/puppetboard
+ExecStart=/usr/bin/gunicorn --env http_proxy= --env PUPPETBOARD_SETTINGS=/var/www/puppetboard/settings.py --pid /run/gunicorn.pid --bind 127.0.0.1:9090 --user puppetboard --group puppetboard puppetboard.app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
