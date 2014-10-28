@@ -11,6 +11,7 @@
 alias ls='ls $LS_OPTIONS'
 alias ll='ls -l'
 alias grep='grep --color'
+alias nossh='ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
 
 eval "$(dircolors)"
 
@@ -18,6 +19,7 @@ umask 022
 
 export LS_OPTIONS='--color=auto -h'
 export EDITOR='vim'
+
 
 # hetzner style PS1
 export PS1='\[\033[01;31m\]\u\[\033[01;33m\]@\[\033[01;36m\]\h \[\033[01;33m\]\w \[\033[01;35m\]\$ \[\033[00m\]'
