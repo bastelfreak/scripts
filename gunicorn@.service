@@ -1,0 +1,23 @@
+[Unit]
+Description=gunicorn daemon for %i
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/gunicorn --config /etc/sysconfig/gunicorn/%i.conf %i
+ExecReload=/bin/kill -s HUP $MAINPID
+PrivateTmp=true
+User=gunicorn
+Group=gunicorn
+#PrivateNetwork=true
+
+[Install]
+WantedBy=multi-user.target
+
+# /etc/sysconfig/gunicorn/puppetboard.app\:app.conf
+#import multiprocessing
+#
+#bind    = '127.0.0.1:9090'
+#workers = multiprocessing.cpu_count() * 2 + 1
+#chdir   = '/usr/lib/python2.7/site-packages/puppetboard'
+#raw_env = ['PUPPETBOARD_SETTINGS=/var/www/puppetboard/settings.py', 'http_proxy=']
+
