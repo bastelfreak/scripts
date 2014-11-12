@@ -11,7 +11,7 @@
 # prints all certnames of nodes without a report in the puppetdb
 # tested on ruby1.9.1
 ##
-require "net/http"
+require 'net/http'
 require 'json'
 
 uri = URI.parse("https://puppetdb/v3/nodes")
