@@ -12,7 +12,7 @@ alias ls='ls $LS_OPTIONS'
 alias ll='ls -l'
 alias grep='grep --color'
 alias nossh='ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
-
+alias megacli_list='megacli -PDList -aAll | egrep "Enclosure Device ID:|Slot Number:|Inquiry Data:|Error Count:|state"'
 eval "$(dircolors)"
 
 umask 022
