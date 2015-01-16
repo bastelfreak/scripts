@@ -25,7 +25,8 @@
 ##
 # Well, this script finally works, look at the code for 'todo' for further improvements
 ##
-# Version is 1.3 (2014-10-14)
+# Version is 1.5.0 (2015-01-16)
+# tested with Ruby 2.2.0
 # My Docs: https://blog.bastelfreak.de/?p=990
 ##
 
@@ -36,10 +37,10 @@ require 'net/ssh'
 module ForgeClient
 
   PuppetForge.user_agent = 'Mozilla/5.0 (Windows NT 5.1; rv:5.0.1) Gecko/20100101 Firefox/5.0.1'
-  @path = '/home/bastelfreak/HE-puppet-admin-git'
+  @path = '/home/bastelfreak/puppet-git'
   @mngt_repo = 'gitolite-admin'
   @mngt_repo_path = "#{@path}/#{@mngt_repo}"
-  @sshalias = 'gitolite-admin-node' # this is an alias in ~/.ssh/config
+  @sshalias = 'puppet-git' # this is an alias in ~/.ssh/config
   @user = 'git'
 
   # this method will do a git checkout
@@ -50,7 +51,6 @@ module ForgeClient
     g.add_remote 'origin', "#{@sshalias}:#{res.name}"
     g.push 'origin', 'master', :set_upstream => true
     puts "and we removed the old remote, added our own repo as origin and set it as upstream"
-    return true
   end
 
   # checks if our gitolite already serves a suitable repo
@@ -67,6 +67,7 @@ module ForgeClient
       mngt_g.commit_all "added repo #{res.name}"
       mngt_g.push
       puts "aaaaaand its added"
+      return true
     end
   end
 
@@ -102,7 +103,10 @@ module ForgeClient
 
   # gets every repo from our gitolite service and return as array
   def self.get_current_repos(output)
-    output.lines[2..-1].map {|s| s[/.*\t(.*)$/, 1] }
+    ary = []
+    output = output.lines.to_a[2..-1].join
+    output.each_line do |line| ary << line[/.*\t(.*)$/, 1] end
+    ary
   end
 
   # connect to forge.puppetlabs.com API to get information about a specific module
@@ -116,7 +120,11 @@ module ForgeClient
     puts "connect to forge.puppetlabs.com because we want to search for #{modulename}"
     results = PuppetForge::Module.where(query: modulename).all
     ary = []
-    results.total > 1 ? results.each do |result| ary << result.name end : results.first
+    if results.total > 1
+      results.map { |result| result.name }
+    else
+      results.first
+    end
   end
 
   # wrapperfunction for searching a module / getting a specific
@@ -126,7 +134,7 @@ module ForgeClient
     if modulename.include?('-') || modulename.include?('/')
       modulename.gsub!('/', '-')
       result = get_puppetforge_module modulename
-    elsif result.nil?
+    else
       get_puppetforge_modules modulename
     end
   end
