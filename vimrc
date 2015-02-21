@@ -11,3 +11,5 @@ set directory=/tmp
 set writebackup
 set autoindent
 set hlsearch
+set laststatus=2
+cmap w!! w !sudo tee > /dev/null %
