@@ -10,13 +10,17 @@
 [[ $- != *i* ]] && return
 alias ls='ls $LS_OPTIONS'
 alias ll='ls -l'
+alias l='ls $LS_OPTIONS -lA'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias s='ssh -l root'
 alias grep='grep --color'
 alias nossh='ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
 alias megacli_list='megacli -PDList -aAll | egrep "Enclosure Device ID:|Slot Number:|Inquiry Data:|Error Count:|Failure Count:|state"'
-alias dmesg="dmesg -T --color"
+alias dmesg='dmesg -T --color'
 # workaround for broken systemd sync
-alias reboot="sync; reboot"
-alias poweroff="sync; poweroff"
+alias reboot='sync; reboot'
+alias poweroff='sync; poweroff'
 
 eval "$(dircolors)"
 
