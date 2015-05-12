@@ -1,3 +1,22 @@
+set nocompatible              " be iMproved, required
+filetype off                  " required
+set rtp+=~/.vim/bundle/Vundle.vim/
+call vundle#begin()
+"Vundles
+Bundle 'gmarik/vundle'
+Bundle 'scrooloose/nerdtree'
+Bundle 'scrooloose/syntastic'
+Bundle 'scrooloose/nerdcommenter'
+Bundle 'bling/vim-airline'
+Bundle 'ervandew/supertab'
+Bundle 'fs111/pydoc.vim'
+Bundle 'tpope/vim-fugitive'
+Bundle 'ajh17/Spacegray.vim'
+" All of your Plugins must be added before the following line
+call vundle#end()            " required
+filetype plugin indent on    " required
+
+
 syntax on
 set tabstop=2
 set shiftwidth=2
@@ -31,3 +50,5 @@ if has('persistent_undo')
     let &undodir = myUndoDir
     set undofile
 endif
+
+let g:syntastic_cpp_compiler_options = '-std=c++11'
