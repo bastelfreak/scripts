@@ -33,6 +33,7 @@ pm.max_spare_servers = 3
 chdir = /
 php_admin_flag[log_errors] = on
 php_admin_value[error_log] = ${root_path}/${domain}/logs/error.php.log
+php_admin_value[max_execution_time] = 180
 END
 		service php5-fpm force-reload
 	fi
