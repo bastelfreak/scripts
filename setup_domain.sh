@@ -33,6 +33,7 @@ pm.max_spare_servers = 3
 chdir = /
 php_admin_flag[log_errors] = on
 php_admin_value[error_log] = ${root_path}/${domain}/logs/error.php.log
+php_admin_value[max_execution_time] = 180
 END
 		service php5-fpm force-reload
 	fi
@@ -123,7 +124,7 @@ cat >> "/etc/apache2/sites-available/${domain}.conf" <<END
 		# throws error, so disabled:
 		# [warn] FastCGI: there is no fastcgi wrapper set, user/group options are ignored
 		#FastCgiExternalServer /fpm-${domain} -host 127.0.0.1:${port} -pass-header Authorization -user ${domain} -group ${domain}
-		FastCgiExternalServer /fpm-${domain} -host 127.0.0.1:${port} -pass-header Authorization
+		FastCgiExternalServer /fpm-${domain} -host 127.0.0.1:${port} -pass-header Authorization -idle-timeout 180
 	</IfModule>
 </VirtualHost>
 END

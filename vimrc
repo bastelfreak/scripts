@@ -1,3 +1,6 @@
+" git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+" vim +PluginInstall +qall
+" mkdir ~/.vim/backupdir/
 set nocompatible              " be iMproved, required
 filetype off                  " required
 set rtp+=~/.vim/bundle/Vundle.vim/
@@ -8,7 +11,6 @@ Bundle 'scrooloose/nerdtree'
 Bundle 'scrooloose/syntastic'
 Bundle 'scrooloose/nerdcommenter'
 Bundle 'bling/vim-airline'
-"Bundle 'ervandew/supertab'
 Bundle 'fs111/pydoc.vim'
 Bundle 'tpope/vim-fugitive'
 Bundle 'ajh17/Spacegray.vim'
