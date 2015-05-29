@@ -1,0 +1,7 @@
+# created by Silvio Knizek
+[Unit]
+Description=Pacman mirrorlist update
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/reflector --age 6 --country Germany --latest 30 --number 20 --sort rate --save /etc/pacman.d/mirrorlist

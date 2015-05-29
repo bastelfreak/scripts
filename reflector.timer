@@ -1,0 +1,10 @@
+# created by Silvio Knizek
+[Unit]
+After=network-online.target
+
+[Timer]
+OnBootSec=10min
+OnActiveSec=6h
+
+[Install]
+WantedBy=network-online.target
