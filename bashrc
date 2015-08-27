@@ -3,7 +3,10 @@
 #
 
 #
-# created by bastelfreak, place this under /etc/skel
+# created by Tim 'bastelfreak' Meusel
+# place this under /etc/skel if you want this as the default bashrc for all new users
+# source: https://github.com/bastelfreak/scripts/blob/master/bashrc
+# Licensed under GNU GPL3 http://www.gnu.org/licenses/gpl-3.0.en.html
 #
 
 # If not running interactively, don't do anything
@@ -18,6 +21,7 @@ alias grep='grep --color'
 alias nossh='ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
 alias megacli_list='megacli -PDList -aAll | egrep "Enclosure Device ID:|Slot Number:|Inquiry Data:|Error Count:|Failure Count:|state"'
 alias dmesg='dmesg -T --color'
+alias r10k='r10k --color'
 # workaround for broken systemd sync
 alias reboot='sync; reboot'
 alias poweroff='sync; poweroff'
