@@ -25,6 +25,7 @@ alias r10k='r10k --color'
 # workaround for broken systemd sync
 alias reboot='sync; reboot'
 alias poweroff='sync; poweroff'
+alias pacman='pacman --color=auto'
 
 eval "$(dircolors)"
 
