@@ -89,5 +89,9 @@ fi
 
 # colorized tail
 ctail() {
-  tail $@ | ccze -A -o nolookups
+  tail "$@" | ccze -A -o nolookups
+}
+# colorized journalctl
+cj() {
+  journalctl -f "$@" | ccze -A -o nolookups
 }
