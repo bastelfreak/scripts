@@ -152,7 +152,7 @@ output_help() {
 	echo ""
 }
 
-can_login() { 
+can_login() {
 	ssh -o BatchMode=yes -q "${REMOTE}" true && return 0 || return $?
 }
 ##
@@ -180,7 +180,7 @@ while getopts ":h:r:o:d:n:w:a:s:c:" opt; do
 		: ) echo "something is wrong with the parameters"; exit 1;;
 	esac
 done
-	
+
 # check if we have to move a website to a new server
 if [ ! -z "${REMOTE}" ]; then
 	# output some help
@@ -197,7 +197,7 @@ if [ ! -z "${REMOTE}" ]; then
 		echo "your provided path is not valid"
 		echo "${DIR}"
 		exit 1
-	fi 
+	fi
 	if [ -z "${DOMAIN}" ]; then
 		echo "you also have to provide the domain for the new vhost (-d)"
 		exit 1
