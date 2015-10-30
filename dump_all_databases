@@ -1,0 +1,62 @@
+#!/bin/bash
+
+##
+# created by foxxx0 and bastelfreak
+##
+# 2014        - creation
+# 2015-07-26  - add postgres stuff
+##
+
+# mysql stuff
+_mysqluser="root"
+_mysqlpass="penis"
+_mysqlhost="192.168.0.12"
+_mysqlopts='--add-drop-database --add-drop-table --create-options --disable-keys --add-locks --lock-tables --extended-insert --quick --set-charset'
+# skip the following databases
+_skipdbs="information_schema"
+# misc stuff
+_hostname="$(hostname)"
+_date=$(date +"%Y-%m-%d")
+_dest="/mysqldumps/${_date}"
+[ ! -d ${_dest} ] && mkdir -p ${_dest} || :
+# initialize vars
+_file=''
+_mysqldbs=''
+_psqldbs=''
+# make destination only root accessible
+chown 0:0 -R ${_dest}
+chmod 0700 ${_dest}
+# get a list of all databases
+_mysqldbs="$(mysql -u ${_mysqluser} -h ${_mysqlhost} -p${_mysqlpass} -Bse 'show databases')"
+_psqldbs="$(su postgres -c "cd ~; psql -tqc 'SELECT datname FROM pg_database where datistemplate = false;'")"
+ 
+for db in ${_mysqldbs}
+do
+    skipdb=-1
+    if [ "${_skipdbs}" != "" ]; then
+		for i in ${_skipdbs}; do
+			[ "${db}" == "${i}" ] && skipdb=1 || :
+		done
+    fi
+ 
+    if [[ ${skipdb} -eq -1 ]]; then
+		_file="${_dest}/${db}.${_hostname}.${_date}.mysql.gz"
+		mysqldump -u ${_mysqluser} -h ${_mysqlhost} -p${_mysqlpass} --databases ${db} | pigz -p 2 > ${_file}
+    fi
+done
+chown postgres: -R ${_dest}
+for db in ${_psqldbs}
+do
+    skipdb=-1
+    if [ "${_skipdbs}" != "" ]; then
+		for i in ${_skipdbs}; do
+			[ "${db}" == "${i}" ] && skipdb=1 || :
+		done
+    fi
+ 
+    if [[ ${skipdb} -eq -1 ]]; then
+		_file="${_dest}/${db}.${_hostname}.${_date}.psql.gz"
+		su postgres -c "cd ~; pg_dump --format=plain ${db} | pigz -p 2 > ${_file}"
+    fi
+done
+chown 0:0 -R ${_dest}
