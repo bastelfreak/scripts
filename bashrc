@@ -22,10 +22,11 @@ alias nossh='ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
 alias megacli_list='megacli -PDList -aAll | egrep "Enclosure Device ID:|Slot Number:|Inquiry Data:|Error Count:|Failure Count:|state"'
 alias dmesg='dmesg -T --color'
 alias r10k='r10k --color'
+alias ip='ip -c'
+alias pacman='pacman --color=auto'
 # workaround for broken systemd sync
 alias reboot='sync; reboot'
 alias poweroff='sync; poweroff'
-alias pacman='pacman --color=auto'
 
 eval "$(dircolors)"
 
