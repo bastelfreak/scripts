@@ -27,6 +27,7 @@ alias pacman='pacman --color=auto'
 # workaround for broken systemd sync
 alias reboot='sync; reboot'
 alias poweroff='sync; poweroff'
+alias dd='dd status=progress'
 
 eval "$(dircolors)"
 
