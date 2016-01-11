@@ -65,3 +65,4 @@ let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 nnoremap <leader>l :lcl<cr>
 let g:syntastic_cpp_compiler_options = '-std=c++11'
+set lcs=tab:⁞\ ,trail:X,nbsp:—,eol:·,precedes:<,extends:>
