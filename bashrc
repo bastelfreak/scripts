@@ -97,3 +97,4 @@ ctail() {
 cj() {
   journalctl -f "$@" | ccze -A -o nolookups
 }
+export CHROOT=/mnt/aur/build_test2
