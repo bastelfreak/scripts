@@ -28,6 +28,7 @@ alias pacman='pacman --color=auto'
 alias reboot='sync; reboot'
 alias poweroff='sync; poweroff'
 alias dd='dd status=progress'
+alias mtr='mtr --aslookup'
 
 eval "$(dircolors)"
 
