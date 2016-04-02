@@ -1,3 +1,3 @@
-xrdb -merge .Xresources &
-urxvtd -f
+#xrdb -merge .Xresources &
+#urxvtd -f
 exec i3
