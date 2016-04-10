@@ -28,6 +28,7 @@ alias pacman='pacman --color=auto'
 alias reboot='sync; reboot'
 alias poweroff='sync; poweroff'
 alias dd='dd status=progress'
+alias mtr='mtr --aslookup'
 
 eval "$(dircolors)"
 
@@ -97,3 +98,4 @@ ctail() {
 cj() {
   journalctl -f "$@" | ccze -A -o nolookups
 }
+export CHROOT=/mnt/aur/build_test2
