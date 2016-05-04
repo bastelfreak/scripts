@@ -33,6 +33,7 @@ set writebackup
 set autoindent
 set hlsearch
 set laststatus=2
+set hidden
 "set undofile
 set undodir=~/.vim/undodir
 set undolevels=1000 "maximum number of changes that can be undone
