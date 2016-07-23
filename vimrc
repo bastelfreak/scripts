@@ -14,6 +14,7 @@ Bundle 'bling/vim-airline'
 Bundle 'fs111/pydoc.vim'
 Bundle 'tpope/vim-fugitive'
 Bundle 'ajh17/Spacegray.vim'
+Bundle 'rodjek/vim-puppet'
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 filetype plugin indent on    " required
