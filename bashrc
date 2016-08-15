@@ -29,6 +29,7 @@ alias reboot='sync; reboot'
 alias poweroff='sync; poweroff'
 alias dd='dd status=progress'
 alias mtr='mtr --aslookup'
+alias jsoncheck='jq "." >/dev/null <'
 
 eval "$(dircolors)"
 
