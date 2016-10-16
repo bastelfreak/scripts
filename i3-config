@@ -277,3 +277,7 @@ exec --no-startup-id i3-msg 'workspace 2:term; exec urxvtc'
 exec --no-startup-id i3-msg 'workspace 4:weechat; exec urxvtc'
 exec --no-startup-id i3-msg 'workspace 5:telegram; exec /usr/bin/chromium'
 exec --no-startup-id i3-msg 'workspace 1:www'
+exec --no-startup-id redshiftgui --min
+exec --no-startup-id nm-applet
+exec --no-startup-id dunst
+exec --no-startup-id numlockx o
