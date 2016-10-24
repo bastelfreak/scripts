@@ -1,6 +1,8 @@
 " git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 " vim +PluginInstall +qall
 " mkdir -p ~/.vim/backupdir/
+" mkdir ~/.vim/ftplugin
+" echo "set colorcolumn=80" >> ~/.vim/ftplugin/tex.vim
 set nocompatible              " be iMproved, required
 filetype off                  " required
 set rtp+=~/.vim/bundle/Vundle.vim/
