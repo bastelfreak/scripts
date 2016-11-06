@@ -99,3 +99,8 @@ cj() {
   journalctl -f "$@" | ccze -A -o nolookups
 }
 export CHROOT=/mnt/aur/build_test2
+
+# added by travis gem
+[ -f /home/bastelfreak/.travis/travis.sh ] && source /home/bastelfreak/.travis/travis.sh
+PATH="$HOME/.node_modules/bin:$PATH"
+export npm_config_prefix=~/.node_modules
