@@ -17,6 +17,7 @@ Bundle 'fs111/pydoc.vim'
 Bundle 'tpope/vim-fugitive'
 Bundle 'ajh17/Spacegray.vim'
 Bundle 'rodjek/vim-puppet'
+Bundle 'junegunn/vim-easy-align'
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 filetype plugin indent on    " required
@@ -70,3 +71,9 @@ let g:syntastic_check_on_wq = 0
 nnoremap <leader>l :lcl<cr>
 let g:syntastic_cpp_compiler_options = '-std=c++11'
 set lcs=tab:⁞\ ,trail:X,nbsp:—,eol:·,precedes:<,extends:>
+
+" Start interactive EasyAlign in visual mode (e.g. vipga)
+xmap ga <Plug>(EasyAlign)
+
+" Start interactive EasyAlign for a motion/text object (e.g. gaip)
+nmap ga <Plug>(EasyAlign)
