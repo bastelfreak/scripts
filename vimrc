@@ -78,3 +78,14 @@ xmap ga <Plug>(EasyAlign)
 
 " Start interactive EasyAlign for a motion/text object (e.g. gaip)
 nmap ga <Plug>(EasyAlign)
+
+" Uncomment the following to have Vim jump to the last position when
+" reopening a file
+if has("autocmd")
+  au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$")
+    \| exe "normal! g'\"" | endif
+endif
+" enable spell checking in tex files
+" switch between languages for checks: set spell spelllang=en_gb
+au FileType tex setlocal spell
+"set spell spelllang=en_gb
