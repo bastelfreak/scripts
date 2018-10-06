@@ -30,6 +30,7 @@ alias poweroff='sync; poweroff'
 alias dd='dd status=progress'
 alias mtr='mtr --aslookup'
 alias jsoncheck='jq "." >/dev/null <'
+alias ncdu='ncdu --color dark'
 
 eval "$(dircolors)"
 
