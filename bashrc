@@ -110,3 +110,8 @@ export CHROOT=/mnt/aur/build_test2
 [ -f /home/bastelfreak/.travis/travis.sh ] && source /home/bastelfreak/.travis/travis.sh
 PATH="$HOME/.node_modules/bin:$PATH"
 export npm_config_prefix=~/.node_modules
+
+# load self compiled go binaries, if we have some
+if [ -d ~/go/bin ]; then
+  export PATH="$PATH:$HOME/go/bin"
+fi
