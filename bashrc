@@ -79,7 +79,7 @@ fi
 
 # check if we have a node specific bash file, and load it
 if [ -f ~/.bashrc.local ]; then
-  . ~/.bashrc_local
+  . ~/.bashrc.local
 fi
 
 # enable programmable completion features (you don't need to enable
