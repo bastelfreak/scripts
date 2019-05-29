@@ -42,7 +42,7 @@ set hidden
 set undodir=~/.vim/undodir
 set undolevels=1000 "maximum number of changes that can be undone
 set undoreload=10000 "maximum number lines to save for undo on a buffer reload
-set incsearch
+set incsearch "search while typing
 cmap w!! w !sudo tee > /dev/null %
 
 " mark hard tabs
@@ -86,3 +86,15 @@ nmap ga <Plug>(EasyAlign)
 " all the tabs and spaces
 highlight BadTabsAndSpaces ctermbg=red guibg=red
 autocmd BufWinEnter * match BadTabsAndSpaces /\t\+\|\s\+$/
+
+" Uncomment the following to have Vim jump to the last position when
+" reopening a file
+if has("autocmd")
+  au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$")
+    \| exe "normal! g'\"" | endif
+endif
+
+" enable spell checking in tex files
+" switch between languages for checks: set spell spelllang=en_gb
+au FileType tex setlocal spell
+"set spell spelllang=en_gb
