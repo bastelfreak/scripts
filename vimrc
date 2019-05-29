@@ -45,6 +45,10 @@ set undoreload=10000 "maximum number lines to save for undo on a buffer reload
 set incsearch
 cmap w!! w !sudo tee > /dev/null %
 
+" mark hard tabs
+highlight BadTab ctermbg=red guibg=red
+match BadTab /\t\+/
+
 " Put plugins and dictionaries in this dir (also on Windows)
 let vimDir = '$HOME/.vim'
 let &runtimepath.=','.vimDir
@@ -78,3 +82,7 @@ xmap ga <Plug>(EasyAlign)
 
 " Start interactive EasyAlign for a motion/text object (e.g. gaip)
 nmap ga <Plug>(EasyAlign)
+
+" all the tabs and spaces
+highlight BadTabsAndSpaces ctermbg=red guibg=red
+autocmd BufWinEnter * match BadTabsAndSpaces /\t\+\|\s\+$/
