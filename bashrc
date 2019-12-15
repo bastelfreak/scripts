@@ -77,6 +77,11 @@ if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
 
+# check if we have a node specific bash file, and load it
+if [ -f ~/.bashrc.local ]; then
+  . ~/.bashrc.local
+fi
+
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
@@ -108,3 +113,14 @@ export npm_config_prefix=~/.node_modules
 
 # added by travis gem
 [ -f /home/bastelfreak/.travis/travis.sh ] && source /home/bastelfreak/.travis/travis.sh
+
+# support local nodejs foo
+if [ -d ~/.node_modules/bin ]; then
+  PATH="$HOME/.node_modules/bin:$PATH"
+fi
+export npm_config_prefix=~/.node_modules
+
+# load self compiled go binaries, if we have some
+if [ -d ~/go/bin ]; then
+  export PATH="$PATH:$HOME/go/bin"
+fi
