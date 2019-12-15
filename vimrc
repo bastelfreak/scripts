@@ -89,3 +89,7 @@ endif
 " switch between languages for checks: set spell spelllang=en_gb
 au FileType tex setlocal spell
 "set spell spelllang=en_gb
+
+" all the tabs and spaces
+highlight BadTabsAndSpaces ctermbg=red guibg=red
+autocmd BufWinEnter * match BadTabsAndSpaces /\t\+\|\s\+$/
