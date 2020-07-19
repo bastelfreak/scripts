@@ -18,6 +18,7 @@ Bundle 'tpope/vim-fugitive'
 Bundle 'ajh17/Spacegray.vim'
 Bundle 'rodjek/vim-puppet'
 Bundle 'junegunn/vim-easy-align'
+Bundle 'vim-latex/vim-latex'
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 filetype plugin indent on    " required
@@ -102,3 +103,9 @@ au FileType tex setlocal spell
 " all the tabs and spaces
 highlight BadTabsAndSpaces ctermbg=red guibg=red
 autocmd BufWinEnter * match BadTabsAndSpaces /\t\+\|\s\+$/
+
+" disable folding in latex caused by vim-latex
+" https://codeyarns.com/2013/05/01/how-to-disable-folding-in-vim-latex/
+let g:Tex_FoldedSections     = ""
+let g:Tex_FoldedEnvironments = ""
+let g:Tex_FoldedMisc         = ""
