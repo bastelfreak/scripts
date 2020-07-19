@@ -33,8 +33,9 @@ alias jsoncheck='jq "." >/dev/null <'
 alias ncdu='ncdu --color dark'
 alias sudo='sudo '
 
-eval "$(dircolors)"
-
+if [ $(command -v dircolors) ]; then
+  eval "$(dircolors)"
+fi
 umask 022
 
 export LS_OPTIONS='--color=auto -h'
@@ -124,3 +125,6 @@ export npm_config_prefix=~/.node_modules
 if [ -d ~/go/bin ]; then
   export PATH="$PATH:$HOME/go/bin"
 fi
+
+# colorize iostat
+export S_COLORS=auto
