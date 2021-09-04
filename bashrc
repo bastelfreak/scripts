@@ -129,3 +129,6 @@ fi
 
 # colorize iostat
 export S_COLORS=auto
+
+[ -f /usr/bin/vault ] && complete -C /usr/bin/vault vault
+[ -f /usr/bin/consul ] && complete -C /usr/bin/consul consul
