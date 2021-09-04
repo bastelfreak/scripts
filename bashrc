@@ -23,6 +23,7 @@ alias megacli_list='megacli -PDList -aAll | egrep "Enclosure Device ID:|Slot Num
 alias dmesg='dmesg -T --color'
 alias r10k='r10k --color'
 alias ip='ip -c'
+alias ipa='ip -br a'
 alias pacman='pacman --color=auto'
 # workaround for broken systemd sync
 alias reboot='sync; reboot'
