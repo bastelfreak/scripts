@@ -56,6 +56,8 @@ shopt -s histappend
 # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
 export HISTFILESIZE='99999999'
 export HISTSIZE='99999999'
+# get date into `history`
+export HISTTIMEFORMAT="%F %T "
 
 # Less Colors for Man Pages
 export LESS_TERMCAP_mb=$'\E[01;31m'       # begin blinking
