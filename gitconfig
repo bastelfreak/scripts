@@ -1,0 +1,22 @@
+[user]
+  email = tim@bastelfreak.de
+  signingkey = 04D659E6BF1C4CC0
+  name = Tim Meusel
+
+[includeIf "gitdir:/home/bastelfreak/code/example42/"] # job needs, like workspace/* so all included projects
+  path = .gitconfig-job
+
+[commit]
+  gpgsign = true
+
+[tag]
+  gpgsign = true
+
+[pull]
+  prune = true
+  rebase = false
+
+[fetch]
+  prune = true
+[init]
+  defaultBranch = master
