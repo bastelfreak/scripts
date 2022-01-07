@@ -109,3 +109,7 @@ autocmd BufWinEnter * match BadTabsAndSpaces /\t\+\|\s\+$/
 let g:Tex_FoldedSections     = ""
 let g:Tex_FoldedEnvironments = ""
 let g:Tex_FoldedMisc         = ""
+
+" save command history and allow to yank 999 lines
+" :help viminfo-!
+:set viminfo='100,<1000,s100,h
