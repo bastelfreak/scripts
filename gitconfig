@@ -6,6 +6,9 @@
 [includeIf "gitdir:/home/bastelfreak/code/example42/"] # job needs, like workspace/* so all included projects
   path = .gitconfig-job
 
+[includeIf "gitdir:/home/bastelfreak/code/betadots/"] # job needs, like workspace/* so all included projects
+  path = .gitconfig-job
+
 [commit]
   gpgsign = true
 
@@ -18,5 +21,9 @@
 
 [fetch]
   prune = true
+
 [init]
   defaultBranch = master
+
+[rerere]
+  enabled = true
