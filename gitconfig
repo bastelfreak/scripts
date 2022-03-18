@@ -27,3 +27,13 @@
 
 [rerere]
   enabled = true
+
+[alias]
+  # Usage: git signoff-rebase [base-commit]
+  signoff-rebase = "!EDITOR='sed -i -re s/^pick/e/' sh -c 'git rebase -i $1 && while test -f .git/rebase-merge/interactive; do git commit --amend --signoff --no-edit && git rebase --continue; done' -"
+  # Ideally we would use GIT_SEQUENCE_EDITOR in the above instead of EDITOR but that's not supported for git < 1.7.8.
+  # See http://cat.pdx.edu/~hunner/git-lg.png for an example
+  lg = "log --pretty=format:'%C(yellow)%h%C(reset) %C(blue)%an%C(reset) %C(cyan)%cr%C(reset) %s %C(green)%d%C(reset)' --graph --date-order"
+  #list-branches = "!f() { git for-each-ref --sort=committerdate refs/heads/  --format='%(HEAD)  %(color:red)%(objectname:short)%(color:reset);%(color:yellow)%(refname:short)%(color:reset);(%(color:green)%(committerdate:relative)%(color:reset));%(authorname);%(contents:subject)'  | column -t -s ';'; }; f"
+  # does the same as above
+  list-branches = "! git branch --format='%(HEAD)  %(color:red)%(objectname:short)%(color:reset);%(color:yellow)%(refname:short)%(color:reset);(%(color:green)%(committerdate:relative)%(color:reset));%(authorname);%(contents:subject)' | column -t -s ';'"
