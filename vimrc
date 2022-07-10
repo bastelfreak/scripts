@@ -1,4 +1,4 @@
-" git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+" git clone https://github.com/VundleVim/Vundle.vim ~/.vim/bundle/Vundle.vim
 " vim +PluginInstall +qall
 " mkdir -p ~/.vim/backupdir/
 " mkdir ~/.vim/ftplugin
