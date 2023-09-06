@@ -134,3 +134,11 @@ export S_COLORS=auto
 
 [ -f /usr/bin/vault ] && complete -C /usr/bin/vault vault
 [ -f /usr/bin/consul ] && complete -C /usr/bin/consul consul
+
+
+function reconfigure_network {
+  interface=$1
+  networkctl down "${interface}"
+  networkctl delete "${interface}"
+  networkctl reload
+}
