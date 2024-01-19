@@ -35,7 +35,7 @@ alias ncdu='ncdu --color dark'
 alias sudo='sudo '
 
 if [ $(command -v dircolors) ]; then
-  eval "$(dircolors)"
+  eval $(TERM=xterm dircolors)
 fi
 umask 022
 
