@@ -23,7 +23,7 @@
   prune = true
 
 [init]
-  defaultBranch = master
+  defaultBranch = main
 
 [rerere]
   enabled = true
@@ -37,3 +37,8 @@
   #list-branches = "!f() { git for-each-ref --sort=committerdate refs/heads/  --format='%(HEAD)  %(color:red)%(objectname:short)%(color:reset);%(color:yellow)%(refname:short)%(color:reset);(%(color:green)%(committerdate:relative)%(color:reset));%(authorname);%(contents:subject)'  | column -t -s ';'; }; f"
   # does the same as above
   list-branches = "! git branch --format='%(HEAD)  %(color:red)%(objectname:short)%(color:reset);%(color:yellow)%(refname:short)%(color:reset);(%(color:green)%(committerdate:relative)%(color:reset));%(authorname);%(contents:subject)' | column -t -s ';'"
+
+[pager]
+  show = /usr/share/git/diff-highlight/diff-highlight | less
+  log = /usr/share/git/diff-highlight/diff-highlight | less
+  diff = /usr/share/git/diff-highlight/diff-highlight | less
